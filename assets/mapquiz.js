@@ -11,7 +11,7 @@ export class MapQuiz{
 
     // Session state
     this.mode = this.storage.get('mapMode') || 'practice'; // practice | sprint60 | set30
-    this.promptType = this.storage.get('mapPromptType') || 'mixed'; // icao|iata|city|name|mixed
+    this.promptType = this.storage.get('mapPromptType') || 'mixed'; // mixed|icao|iata|city|name
     this.running = false;
     this.remainingSec = 0;
     this.totalQ = 0;
@@ -37,9 +37,6 @@ export class MapQuiz{
 
     this.mapModeEl = document.querySelector('#map-mode');
     this.promptTypeEl = document.querySelector('#map-prompt-type');
-    this.promptBadgeEl = document.querySelector('#map-prompt-badge');
-    this.promptTextEl = document.querySelector('#map-prompt-text');
-    this.mapHintEl = document.querySelector('#map-hint');
     this.startBtn = document.querySelector('#map-start');
     this.timerEl = document.querySelector('#map-timer');
     this.summaryEl = document.querySelector('#map-summary');
@@ -53,10 +50,10 @@ export class MapQuiz{
     if (this.promptTypeEl){
       this.promptTypeEl.value = this.promptType;
       this.promptTypeEl.addEventListener('change', ()=>{
-        this.promptType = this.promptTypeEl.value;
+        this.promptType = this.promptTypeEl.value || 'mixed';
         this.storage.set('mapPromptType', this.promptType);
-        if (this.running){ this.newTarget(); }
-        else { this.renderPrompt(); }
+        // Re-render current prompt if any
+        if (this.target) this.renderPrompt();
       });
     }
     if (this.startBtn){
@@ -82,9 +79,9 @@ export class MapQuiz{
     if (this.mode === 'practice' && this.map){
       this.startPractice();
     } else {
-      this.noteEl.textContent = 'Press Start to begin.';
-      this.qEl.textContent = '—';
-      this.subEl.textContent = '';
+      if (this.noteEl) this.noteEl.textContent = 'Press Start to begin.';
+      if (this.qEl) this.qEl.textContent = '—';
+      if (this.subEl) this.subEl.textContent = '';
     }
   }
 
@@ -98,10 +95,11 @@ export class MapQuiz{
 
   start(){
     if (!window.L){
-      this.noteEl.textContent = 'Leaflet failed to load.';
+      if (this.noteEl) this.noteEl.textContent = 'Leaflet failed to load.';
       return;
     }
     if (!this.map){
+      // IMPORTANT: do NOT auto-pan/auto-jump; keep view stable.
       this.map = L.map('map', { worldCopyJump:false, zoomControl:false }).setView([20,0], 2);
 
       // Blind map: no labels
@@ -110,38 +108,7 @@ export class MapQuiz{
         attribution: '© OpenStreetMap contributors • © CARTO'
       }).addTo(this.map);
 
-      this.map.on('click', (e)=> this.
-
-makePrompt(){
-  const a = this.target;
-  if (!a) return { badge:'', text:'' };
-  let t = this.promptType || 'mixed';
-  if (t === 'mixed'){
-    const opts = [];
-    if (a.icao) opts.push('icao');
-    if (a.iata) opts.push('iata');
-    if (a.city) opts.push('city');
-    if (a.name) opts.push('name');
-    t = opts.length ? opts[Math.floor(Math.random()*opts.length)] : 'name';
-  }
-  const badge = t.toUpperCase();
-  let text = '';
-  if (t === 'icao') text = a.icao || '';
-  else if (t === 'iata') text = a.iata || '';
-  else if (t === 'city') text = a.city || '';
-  else text = a.name || a.city || a.icao || a.iata || '';
-  return { badge, text };
-}
-
-renderPrompt(){
-  if (!this.target) return;
-  const p = this.makePrompt();
-  if (this.promptBadgeEl) this.promptBadgeEl.textContent = p.badge;
-  if (this.promptTextEl) this.promptTextEl.textContent = p.text;
-  if (this.mapHintEl) this.mapHintEl.textContent = 'Click the map where this airport is located.';
-}
-
-onClick(e));
+      this.map.on('click', (e)=> this.onClick(e));
 
       this.markerGuess = L.circleMarker([0,0], { radius:8, weight:2 }).addTo(this.map).setStyle({ opacity:0, fillOpacity:0 });
       this.markerTrue  = L.circleMarker([0,0], { radius:8, weight:2 }).addTo(this.map).setStyle({ opacity:0, fillOpacity:0 });
@@ -154,9 +121,9 @@ onClick(e));
     if (this.mode === 'practice'){
       this.startPractice();
     } else {
-      this.noteEl.textContent = 'Press Start to begin.';
-      this.qEl.textContent = '—';
-      this.subEl.textContent = '';
+      if (this.noteEl) this.noteEl.textContent = 'Press Start to begin.';
+      if (this.qEl) this.qEl.textContent = '—';
+      if (this.subEl) this.subEl.textContent = '';
     }
   }
 
@@ -174,9 +141,9 @@ onClick(e));
   startPractice(){
     this.stopSession();
     if (this.summaryEl) this.summaryEl.style.display = 'none';
-    this.noteEl.textContent = '';
-    this.qEl.textContent = '—';
-    this.subEl.textContent = '';
+    if (this.noteEl) this.noteEl.textContent = '';
+    if (this.qEl) this.qEl.textContent = '—';
+    if (this.subEl) this.subEl.textContent = '';
     this.clearMarkers();
     this.next();
   }
@@ -184,9 +151,9 @@ onClick(e));
   startSession(){
     const geoPool = this.pool.filter(hasGeo);
     if (!geoPool.length){
-      this.noteEl.textContent = 'No coordinates available in current dataset. Run the GitHub Action to build the global dataset first.';
-      this.qEl.textContent = 'Map Quiz disabled';
-      this.subEl.textContent = '';
+      if (this.noteEl) this.noteEl.textContent = 'No coordinates available in current dataset. Run the GitHub Action to build the global dataset first.';
+      if (this.qEl) this.qEl.textContent = 'Map Quiz disabled';
+      if (this.subEl) this.subEl.textContent = '';
       return;
     }
 
@@ -231,7 +198,7 @@ onClick(e));
       }
     }
 
-    this.noteEl.textContent = '';
+    if (this.noteEl) this.noteEl.textContent = '';
     this.next();
   }
 
@@ -253,8 +220,8 @@ onClick(e));
           ${topMisses.map(r=>{
             const a = r.target;
             const code = a.icao || a.iata || '';
-            const name = a.name ? ` — ${escapeHtml(a.name)}` : '';
-            return `• ${escapeHtml(code)}${name}: ~${Math.round(r.km)} km`;
+            const name = a.name ? ` — ${a.name}` : '';
+            return `• ${escapeHtml(code)}${escapeHtml(name)}: ~${Math.round(r.km)} km`;
           }).join('<br>')}
         </div></div>`
       : '';
@@ -263,40 +230,73 @@ onClick(e));
       this.summaryEl.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">
           <div>
-            <div style="font-weight:900;">Session complete</div>
+            <div style="font-weight:900;">Session finished</div>
             <div class="smallmuted" style="margin-top:4px;">
-              Answered: <b>${total}</b> • Correct: <b style="color:var(--good);">${this.correct}</b> • Wrong: <b style="color:var(--bad);">${this.wrong}</b><br>
-              Accuracy: <b>${acc}%</b> • Avg error: <b>~${Math.round(avgErr)} km</b>
+              Answered: <b>${total}</b> • Accuracy: <b>${acc}%</b> • Avg error: <b>~${Math.round(avgErr)} km</b>
             </div>
           </div>
-          <button class="ghost" id="map-close-summary">Close</button>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="ghost" id="map-close-summary">Close</button>
+          </div>
         </div>
         ${list}
-        <div class="smallmuted" style="margin-top:10px;">Tip: switch Mode and press Start to run another session.</div>
       `;
       this.summaryEl.style.display = 'block';
-      const btn = document.querySelector('#map-close-summary');
-      if (btn){
-        btn.addEventListener('click', ()=>{ this.summaryEl.style.display = 'none'; }, { once:true });
-      }
+
+      const closeBtn = this.summaryEl.querySelector('#map-close-summary');
+      if (closeBtn) closeBtn.addEventListener('click', ()=> { this.summaryEl.style.display = 'none'; });
     }
 
-    this.noteEl.innerHTML = '';
-    this.qEl.textContent = '—';
-    this.subEl.textContent = '';
-    if (this.timerEl) this.timerEl.textContent = '—';
+    // Keep the summary visible until user closes; do not auto-clear
+    if (this.noteEl) this.noteEl.innerHTML = '';
+    if (this.qEl) this.qEl.textContent = '—';
+    if (this.subEl) this.subEl.textContent = '';
   }
 
-  // ---------- Question flow ----------
+  // ---------- Question generation ----------
+  makePrompt(airport){
+    const a = airport;
+    let t = (this.promptType || 'mixed').toLowerCase();
+    if (t === 'mixed'){
+      const opts = [];
+      if (a.icao) opts.push('icao');
+      if (a.iata) opts.push('iata');
+      if (a.city) opts.push('city');
+      if (a.name) opts.push('name');
+      t = opts.length ? opts[Math.floor(Math.random()*opts.length)] : 'name';
+    }
+    const badge = t.toUpperCase();
+    let text = '';
+    if (t === 'icao') text = a.icao || '';
+    else if (t === 'iata') text = a.iata || '';
+    else if (t === 'city') text = a.city || '';
+    else text = a.name || a.city || a.icao || a.iata || '';
+    return { badge, text };
+  }
+
+  renderPrompt(){
+    if (!this.target || !this.qEl) return;
+    const p = this.makePrompt(this.target);
+    // Highlight what the prompt is (ICAO/IATA/CITY/NAME)
+    this.qEl.innerHTML = `<span class="pill" style="margin-right:8px;">${escapeHtml(p.badge)}</span>${escapeHtml(p.text)}`;
+    if (this.subEl){
+      const city = this.target.city ? this.target.city : '';
+      const ctry = this.target.country ? this.target.country : '';
+      const extra = [city, ctry].filter(Boolean).join(', ');
+      this.subEl.textContent = extra;
+    }
+  }
+
   next(){
     const geoPool = this.pool.filter(hasGeo);
     if (!geoPool.length){
-      this.noteEl.textContent = 'No coordinates available in current dataset. Run the GitHub Action to build the global dataset first.';
-      this.qEl.textContent = 'Map Quiz disabled';
-      this.subEl.textContent = '';
+      if (this.noteEl) this.noteEl.textContent = 'No coordinates available in current dataset. Run the GitHub Action to build the global dataset first.';
+      if (this.qEl) this.qEl.textContent = 'Map Quiz disabled';
+      if (this.subEl) this.subEl.textContent = '';
       return;
     }
 
+    // Session completion logic
     if (this.mode === 'sprint60' && this.remainingSec <= 0){
       this.finishSession();
       return;
@@ -308,14 +308,11 @@ onClick(e));
 
     this.clearMarkers();
     this.target = pick(geoPool);
+    this.renderPrompt();
 
-    const label = this.target.icao || this.target.iata || '';
-    const name = this.target.name ? ` — ${this.target.name}` : '';
-    this.qEl.textContent = label + name;
-
-    const city = this.target.city ? this.target.city : '';
-    const ctry = this.target.country ? this.target.country : '';
-    this.subEl.textContent = [city, ctry].filter(Boolean).join(', ');
+    if (this.noteEl){
+      this.noteEl.innerHTML = '<span class="smallmuted">Answer:</span> click the correct location on the map.';
+    }
 
     if (this.mode === 'set30' && this.timerEl){
       this.timerEl.textContent = `Q ${Math.min(this.answered+1, this.totalQ)}/${this.totalQ}`;
@@ -323,11 +320,13 @@ onClick(e));
   }
 
   onClick(e){
-    const viewCenter = this.map ? this.map.getCenter() : null;
-    const viewZoom = this.map ? this.map.getZoom() : null;
     if (!this.target) return;
     if (this.mode === 'sprint60' && this.remainingSec <= 0) return;
     if (this.mode === 'set30' && this.answered >= this.totalQ) return;
+
+    // Preserve current view; do not let anything pan/zoom the map
+    const center = this.map ? this.map.getCenter() : null;
+    const zoom = this.map ? this.map.getZoom() : null;
 
     const g = e.latlng;
     const dkm = kmDistance(g.lat, g.lng, this.target.lat, this.target.lon);
@@ -337,6 +336,11 @@ onClick(e));
     this.markerGuess.setLatLng([g.lat,g.lng]).setStyle({ opacity:1, fillOpacity:0.6, color: ok ? 'var(--good)' : 'var(--bad)' });
     this.markerTrue .setLatLng([this.target.lat,this.target.lon]).setStyle({ opacity:1, fillOpacity:0.6, color:'var(--accent)' });
     this.line.setLatLngs([[g.lat,g.lng],[this.target.lat,this.target.lon]]).setStyle({ opacity:0.85, color: ok ? 'var(--good)' : 'var(--bad)' });
+
+    // Restore view (guard against any accidental jump)
+    if (this.map && center && typeof zoom === 'number'){
+      this.map.setView(center, zoom, { animate:false });
+    }
 
     // Global stats (persisted)
     this.stats.answer(ok);
@@ -350,11 +354,13 @@ onClick(e));
       this.results.push({ ok, km: dkm, target: this.target, guess:{ lat:g.lat, lon:g.lng } });
     }
 
-    // Feedback (longer + explicit)
-    const dur = ok ? 2400 : 6500;
-    this.noteEl.innerHTML = ok
-      ? `<span style="color:var(--good);font-weight:900;">Correct!</span> Error: <b>~${Math.round(dkm)} km</b>`
-      : this.buildMissHtml(dkm);
+    // Feedback (much longer, user-friendly)
+    const dur = ok ? 3000 : 9000;
+    if (this.noteEl){
+      this.noteEl.innerHTML = ok
+        ? `<span style="color:var(--good);font-weight:900;">Correct!</span> Error: <b>~${Math.round(dkm)} km</b>`
+        : this.buildMissHtml(dkm);
+    }
 
     this.clearPendingNext();
     this.nextId = setTimeout(()=>{
@@ -393,5 +399,5 @@ onClick(e));
 }
 
 function escapeHtml(s){
-  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return (s||'').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
