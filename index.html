@@ -22,6 +22,7 @@
         <button class="ghost" id="btn-srs">Learn</button>
         <button class="ghost" id="btn-rapid">Rapid</button>
         <button class="ghost" id="btn-map">Map</button>
+        <button class="ghost" id="btn-drill">Drill</button>
         <button id="btn-reset" class="ghost" title="Reset progress">Reset</button>
       </div>
     </div>
@@ -128,6 +129,7 @@
               <button class="ghost" id="rapid-submit">Submit</button>
             </div>
             <div class="notice" style="margin-top:12px;" id="rapid-meta">Score: 0</div>
+            <div class="notice" style="margin-top:10px; display:none;" id="rapid-feedback"></div>
           </div>
         </div>
 
@@ -154,7 +156,31 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-  <script type="module">
+  
+    <div class="view" data-view="drill" style="display:none;">
+      <div class="card">
+        <div class="cardtitle">Targeted Drill</div>
+        <div class="smallmuted">This mode learns from your mistakes and confusions. Do some rounds in Learn/Rapid first.</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+          <button id="btn-drill-mistakes">Start Mistakes Drill (Rapid)</button>
+          <button class="ghost" id="btn-export" title="Downloads: mistakes.csv + confusions.csv">Export CSV</button>
+          <button class="ghost" id="btn-clear-perf" title="Clear mistakes & confusions">Clear Drill Data</button>
+        </div>
+      </div>
+
+      <div class="grid2" style="margin-top:12px;">
+        <div class="card">
+          <div class="cardtitle">Top confusions</div>
+          <div id="drill-topconf"></div>
+        </div>
+        <div class="card">
+          <div class="cardtitle">Most missed airports</div>
+          <div id="drill-mistakes"></div>
+        </div>
+      </div>
+    </div>
+
+<script type="module">
     import './assets/app.js';
   </script>
 </body>
