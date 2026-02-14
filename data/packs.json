@@ -1,0 +1,22 @@
+{
+  "packs": [
+    {
+      "id": "global",
+      "name": "Global (all airports)",
+      "description": "Full OurAirports dataset (built by GitHub Actions).",
+      "filter": "all"
+    },
+    {
+      "id": "wizz-network",
+      "name": "Wizz Network (ICAO list)",
+      "description": "Airports from your airports.txt (ICAO list).",
+      "filter": "tag:wizz-network"
+    },
+    {
+      "id": "wizz-bases",
+      "name": "Wizz Bases (IATA list)",
+      "description": "Bases from your base.txt (IATA list).",
+      "filter": "tag:wizz-base"
+    }
+  ]
+}
