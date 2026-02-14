@@ -88,7 +88,7 @@ export class MapQuiz{
       return;
     }
     if (!this.map){
-      this.map = L.map('map', { worldCopyJump:true, zoomControl:false }).setView([20,0], 2);
+      this.map = L.map('map', { worldCopyJump:false, zoomControl:false }).setView([20,0], 2);
 
       // Blind map: no labels
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
