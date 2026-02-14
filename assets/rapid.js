@@ -1,7 +1,9 @@
-import { norm, pick, prettyAirport } from './utils.js';
+import { norm, pick, prettyAirport, nameMatch } from './utils.js';
+import { perf } from './perf.js';
 
 export class RapidFire{
   constructor(storage, stats){
+    this.customTitle = null;
     this.storage = storage;
     this.stats = stats;
     this.pool = [];
@@ -13,6 +15,7 @@ export class RapidFire{
     this.bindUI();
   }
   setPool(pool){ this.pool = pool; }
+  setCustomTitle(t){ this.customTitle = t; }
   reset(){}
 
   bindUI(){
@@ -20,6 +23,7 @@ export class RapidFire{
     this.subEl = document.querySelector('#rapid-sub');
     this.inEl = document.querySelector('#rapid-input');
     this.metaEl = document.querySelector('#rapid-meta');
+    this.feedbackEl = document.querySelector('#rapid-feedback');
     this.btnStart = document.querySelector('#rapid-start');
     this.btnStop = document.querySelector('#rapid-stop');
     this.btnStart.addEventListener('click', ()=> this.start());
@@ -46,6 +50,7 @@ export class RapidFire{
     this.btnStart.disabled = false;
     this.btnStop.disabled = true;
     this.metaEl.textContent = `Score: ${this.score}`;
+    if (this.feedbackEl){ this.feedbackEl.style.display='none'; this.feedbackEl.textContent=''; }
   }
 
   tick(){
@@ -95,7 +100,7 @@ export class RapidFire{
     if (this.qType === 'iata->icao'){ correctRaw = a.icao || ''; ok = guess === norm(correctRaw); }
     if (this.qType === 'code->name'){
       correctRaw = a.name || '';
-      ok = !!correctRaw && guess.length>=4 && correctRaw.toUpperCase().includes(guess);
+      ok = !!correctRaw && nameMatch(this.inEl.value, correctRaw);
     }
     if (this.qType === 'name->code'){
       correctRaw = a.icao || a.iata || '';
@@ -103,13 +108,45 @@ export class RapidFire{
     }
 
     this.stats.answer(ok);
+    if (!ok){
+      perf.recordMistake(this.storage, a);
+      if (this.qType === 'icao->iata') perf.recordConfusion(this.storage, 'IATA', correctRaw, guess);
+      if (this.qType === 'iata->icao') perf.recordConfusion(this.storage, 'ICAO', correctRaw, guess);
+    }
     if (ok){
       this.score += 1;
-      this.next();
+      this.showFeedback(true, a, correctRaw, guess);
+      setTimeout(()=> this.next(), 900);
     } else {
       this.score = Math.max(0, this.score-1);
-      this.metaEl.textContent = `❌ ${a.icao||'—'}/${a.iata||'—'} • ${prettyAirport(a)}`;
-      this.next();
+      this.showFeedback(false, a, correctRaw, guess);
+      setTimeout(()=> this.next(), 1800);
     }
+  showFeedback(isOk, a, correctRaw, guess){
+    if (!this.feedbackEl) return;
+    const pills = [];
+    if ((a.tags||[]).includes('wizz-base')) pills.push('<span class="pill good">WIZZ BASE</span>');
+    if ((a.tags||[]).includes('wizz-network')) pills.push('<span class="pill">WIZZ NET</span>');
+    const lead = isOk ? '✅' : '❌';
+    const title = isOk ? 'Correct' : 'Not correct';
+    const correctTxt = correctRaw ? escapeHtml(correctRaw) : '—';
+    const guessTxt = escapeHtml((this.inEl.value||'').trim() || '—');
+    this.feedbackEl.style.display = 'block';
+    this.feedbackEl.innerHTML = `
+      <div class="pills" style="margin-bottom:8px;">
+        <span class="pill ${isOk?'good':'bad'}">${title}</span>
+        <span class="pill">${escapeHtml(a.icao || '—')} / ${escapeHtml(a.iata || '—')}</span>
+        ${pills.join(' ')}
+      </div>
+      <div style="font-weight:900;font-size:18px;line-height:1.2;">${lead} Correct: <span class="mono">${correctTxt}</span></div>
+      <div class="smallmuted" style="margin-top:6px;">Your input: <span class="mono">${guessTxt}</span> • ${escapeHtml(prettyAirport(a))}</div>
+    `;
   }
+
+  }
+}
+
+
+function escapeHtml(s){
+  return (s||'').toString().replace(/[&<>\"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }

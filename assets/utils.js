@@ -1,6 +1,38 @@
 export function norm(s){
   return (s||'').toString().trim().toUpperCase();
 }
+
+/**
+ * Normalize free-text (airport names/cities) so the user doesn't need to type diacritics
+ * or punctuation exactly (e.g. Łódź == Lodz, José == Jose).
+ */
+export function normLoose(s){
+  const raw = (s||'').toString().trim();
+  if (!raw) return '';
+  // Common special letters that don't always decompose nicely with NFD
+  const pre = raw
+    .replace(/ß/g, 'ss')
+    .replace(/Æ/g, 'AE').replace(/æ/g, 'ae')
+    .replace(/Œ/g, 'OE').replace(/œ/g, 'oe')
+    .replace(/Ø/g, 'O').replace(/ø/g, 'o')
+    .replace(/Đ/g, 'D').replace(/đ/g, 'd')
+    .replace(/Ł/g, 'L').replace(/ł/g, 'l')
+    .replace(/Þ/g, 'TH').replace(/þ/g, 'th');
+  const noDia = pre.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return noDia
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function nameMatch(guessRaw, targetRaw){
+  const guess = normLoose(guessRaw);
+  const target = normLoose(targetRaw);
+  if (!guess || !target) return false;
+  return guess.length >= 4 && target.includes(guess);
+}
+
 export function prettyAirport(a){
   const parts=[];
   if (a.name) parts.push(a.name);

@@ -1,4 +1,5 @@
 import { hasGeo, kmDistance, pick, prettyAirport } from './utils.js';
+import { perf } from './perf.js';
 
 export class MapQuiz{
   constructor(storage, stats){
@@ -25,10 +26,10 @@ export class MapQuiz{
       return;
     }
     if (!this.map){
-      this.map = L.map('map', {worldCopyJump:true}).setView([20,0], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      this.map = L.map('map', {worldCopyJump:true, zoomControl:false}).setView([20,0], 2);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
         maxZoom: 10,
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors • © CARTO'
       }).addTo(this.map);
       this.map.on('click', (e)=> this.onClick(e));
       this.markerGuess = L.circleMarker([0,0], {radius:8}).addTo(this.map).setStyle({opacity:0, fillOpacity:0});
@@ -72,9 +73,10 @@ export class MapQuiz{
     this.line.setLatLngs([[g.lat,g.lng],[this.target.lat,this.target.lon]]).setStyle({opacity:0.8});
 
     this.stats.answer(ok);
+    if (!ok){ perf.recordMistake(this.storage, this.target); }
     this.noteEl.innerHTML = ok
       ? `<span style="color:var(--good);font-weight:900;">Correct!</span> ~${Math.round(dkm)} km`
-      : `<span style="color:var(--bad);font-weight:900;">Miss</span> ~${Math.round(dkm)} km • ${escapeHtml(prettyAirport(this.target))}`;
+      : (()=>{ const pills=[]; if((this.target.tags||[]).includes('wizz-base')) pills.push('<span class="pill good">WIZZ BASE</span>'); if((this.target.tags||[]).includes('wizz-network')) pills.push('<span class="pill">WIZZ NET</span>'); return `<span style="color:var(--bad);font-weight:900;">Miss</span> ~${Math.round(dkm)} km • ${escapeHtml(prettyAirport(this.target))} ${pills.join(' ')}`; })();
 
     setTimeout(()=>this.next(), 900);
   }

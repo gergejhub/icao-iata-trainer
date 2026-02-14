@@ -2,6 +2,7 @@ import { loadDataset, getPackFilter, makeAirportPool } from './data.js';
 import { SRS } from './srs.js';
 import { RapidFire } from './rapid.js';
 import { MapQuiz } from './mapquiz.js';
+import { Drill } from './drill.js';
 import { Stats } from './stats.js';
 import { storage } from './storage.js';
 
@@ -15,6 +16,7 @@ const state = {
   srs: null,
   rapid: null,
   map: null,
+  drill: null,
   stats: null,
 };
 
@@ -36,7 +38,7 @@ function showView(id){
 function setMode(mode){
   state.mode = mode;
   showView(mode);
-  const map = {home:'HOME', srs:'LEARN (SRS)', rapid:'RAPID-FIRE', map:'MAP QUIZ'};
+  const map = {home:'HOME', srs:'LEARN (SRS)', rapid:'RAPID-FIRE', map:'MAP QUIZ', drill:'DRILL'};
   $('#mode-badge').textContent = map[mode] ?? 'HOME';
 }
 
@@ -59,6 +61,13 @@ async function boot(){
   state.srs = new SRS(storage, state.stats);
   state.rapid = new RapidFire(storage, state.stats);
   state.map = new MapQuiz(storage, state.stats);
+  state.drill = new Drill(storage, state.stats, (pool, meta)=>{
+    // start rapid-fire with a custom pool
+    state.rapid.setPool(pool);
+    state.rapid.setCustomTitle(meta?.title || 'Custom Drill');
+    setMode('rapid');
+    state.rapid.start();
+  });
 
   const packSel = $('#packSelect');
   packSel.innerHTML = '';
@@ -91,6 +100,7 @@ async function boot(){
   $('#btn-srs').addEventListener('click', ()=> { setMode('srs'); state.srs.start(); });
   $('#btn-rapid').addEventListener('click', ()=> { setMode('rapid'); state.rapid.start(); });
   $('#btn-map').addEventListener('click', ()=> { setMode('map'); state.map.start(); });
+  $('#btn-drill').addEventListener('click', ()=> { setMode('drill'); state.drill.render(); });
 
   $('#btn-reset').addEventListener('click', ()=>{
     if (!confirm('Reset progress (SRS + stats)?')) return;

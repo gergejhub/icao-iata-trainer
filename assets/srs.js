@@ -1,4 +1,5 @@
-import { norm, prettyAirport, pick } from './utils.js';
+import { norm, prettyAirport, pick, nameMatch } from './utils.js';
+import { perf } from './perf.js';
 
 export class SRS{
   constructor(storage, stats){
@@ -76,7 +77,8 @@ export class SRS{
   reveal(){
     const a = this.current;
     const t = this.questionType;
-    const input = norm(this.inEl.value);
+    const inputRaw = (this.inEl.value||'');
+    const input = norm(inputRaw);
     const correct = this.getCorrectAnswer(a, t);
     const isCorrect = this.checkAnswer(input, correct, a, t);
 
@@ -87,11 +89,18 @@ export class SRS{
       <div class="pills" style="margin-bottom:8px;">
         <span class="pill ${isCorrect?'good':'bad'}">${isCorrect?'Correct':'Not quite'}</span>
         <span class="pill">${a.icao || '—'} / ${a.iata || '—'}</span>
+        ${(a.tags||[]).includes('wizz-base') ? '<span class="pill good">WIZZ BASE</span>' : ''}
+        ${(a.tags||[]).includes('wizz-network') ? '<span class="pill">WIZZ NET</span>' : ''}
       </div>
       <div style="font-weight:900;font-size:18px;margin-bottom:6px;">Answer: ${escapeHtml(correct.display)}</div>
       <div class="smallmuted">${escapeHtml(prettyAirport(a))}</div>
     `;
     this.stats.answer(isCorrect);
+    if (!isCorrect){
+      perf.recordMistake(this.storage, a);
+      if (t === 'icao->iata' || t === 'name->iata') perf.recordConfusion(this.storage, 'IATA', correct.raw, given.raw);
+      if (t === 'iata->icao' || t === 'name->icao') perf.recordConfusion(this.storage, 'ICAO', correct.raw, given.raw);
+    }
   }
 
   grade(level){
@@ -129,10 +138,8 @@ export class SRS{
     if (t.endsWith('->iata') || t.endsWith('->icao')){
       return input === norm(correct.raw);
     }
-    const target = (a.name || '').toUpperCase();
-    if (!target) return false;
-    const guess = input.toUpperCase();
-    return guess.length >= 4 && target.includes(guess);
+    // name questions: diacritics-insensitive partial match (min 4 chars)
+    return nameMatch(this.inEl.value, a.name || '');
   }
 
   key(a){

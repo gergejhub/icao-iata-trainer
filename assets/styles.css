@@ -180,9 +180,16 @@ button:disabled{opacity:.45; cursor:not-allowed;}
 .actions button.good{border-color:rgba(53,208,127,.35);}
 .actions button.bad{border-color:rgba(255,92,92,.35);}
 hr.sep{border:none;border-top:1px solid var(--border); margin:14px 0;}
-#map{height:420px; border-radius:14px; overflow:hidden; border:1px solid var(--border);}
+#map{height:70vh; max-height:720px; min-height:460px; border-radius:14px; overflow:hidden; border:1px solid var(--border);}
 .footer{
   margin-top:16px;
   color:var(--muted);
   font-size:12px;
 }
+
+
+.grid2{ display:grid; grid-template-columns: 1fr; gap:12px; }
+@media(min-width: 900px){ .grid2{ grid-template-columns: 1fr 1fr; } }
+.rowline{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
+.rowline:first-child{ border-top:none; }
+.mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; letter-spacing:0.2px; }
