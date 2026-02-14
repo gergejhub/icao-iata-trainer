@@ -11,6 +11,7 @@ export class MapQuiz{
 
     // Session state
     this.mode = this.storage.get('mapMode') || 'practice'; // practice | sprint60 | set30
+    this.promptType = this.storage.get('mapPromptType') || 'mixed'; // icao|iata|city|name|mixed
     this.running = false;
     this.remainingSec = 0;
     this.totalQ = 0;
@@ -35,6 +36,10 @@ export class MapQuiz{
     this.noteEl = document.querySelector('#map-note');
 
     this.mapModeEl = document.querySelector('#map-mode');
+    this.promptTypeEl = document.querySelector('#map-prompt-type');
+    this.promptBadgeEl = document.querySelector('#map-prompt-badge');
+    this.promptTextEl = document.querySelector('#map-prompt-text');
+    this.mapHintEl = document.querySelector('#map-hint');
     this.startBtn = document.querySelector('#map-start');
     this.timerEl = document.querySelector('#map-timer');
     this.summaryEl = document.querySelector('#map-summary');
@@ -44,6 +49,15 @@ export class MapQuiz{
     if (this.mapModeEl){
       this.mapModeEl.value = this.mode;
       this.mapModeEl.addEventListener('change', ()=> this.setMode(this.mapModeEl.value));
+    }
+    if (this.promptTypeEl){
+      this.promptTypeEl.value = this.promptType;
+      this.promptTypeEl.addEventListener('change', ()=>{
+        this.promptType = this.promptTypeEl.value;
+        this.storage.set('mapPromptType', this.promptType);
+        if (this.running){ this.newTarget(); }
+        else { this.renderPrompt(); }
+      });
     }
     if (this.startBtn){
       this.startBtn.addEventListener('click', ()=> this.startSession());
@@ -96,7 +110,38 @@ export class MapQuiz{
         attribution: '© OpenStreetMap contributors • © CARTO'
       }).addTo(this.map);
 
-      this.map.on('click', (e)=> this.onClick(e));
+      this.map.on('click', (e)=> this.
+
+makePrompt(){
+  const a = this.target;
+  if (!a) return { badge:'', text:'' };
+  let t = this.promptType || 'mixed';
+  if (t === 'mixed'){
+    const opts = [];
+    if (a.icao) opts.push('icao');
+    if (a.iata) opts.push('iata');
+    if (a.city) opts.push('city');
+    if (a.name) opts.push('name');
+    t = opts.length ? opts[Math.floor(Math.random()*opts.length)] : 'name';
+  }
+  const badge = t.toUpperCase();
+  let text = '';
+  if (t === 'icao') text = a.icao || '';
+  else if (t === 'iata') text = a.iata || '';
+  else if (t === 'city') text = a.city || '';
+  else text = a.name || a.city || a.icao || a.iata || '';
+  return { badge, text };
+}
+
+renderPrompt(){
+  if (!this.target) return;
+  const p = this.makePrompt();
+  if (this.promptBadgeEl) this.promptBadgeEl.textContent = p.badge;
+  if (this.promptTextEl) this.promptTextEl.textContent = p.text;
+  if (this.mapHintEl) this.mapHintEl.textContent = 'Click the map where this airport is located.';
+}
+
+onClick(e));
 
       this.markerGuess = L.circleMarker([0,0], { radius:8, weight:2 }).addTo(this.map).setStyle({ opacity:0, fillOpacity:0 });
       this.markerTrue  = L.circleMarker([0,0], { radius:8, weight:2 }).addTo(this.map).setStyle({ opacity:0, fillOpacity:0 });
@@ -278,6 +323,8 @@ export class MapQuiz{
   }
 
   onClick(e){
+    const viewCenter = this.map ? this.map.getCenter() : null;
+    const viewZoom = this.map ? this.map.getZoom() : null;
     if (!this.target) return;
     if (this.mode === 'sprint60' && this.remainingSec <= 0) return;
     if (this.mode === 'set30' && this.answered >= this.totalQ) return;
@@ -304,7 +351,7 @@ export class MapQuiz{
     }
 
     // Feedback (longer + explicit)
-    const dur = ok ? 1800 : 4200;
+    const dur = ok ? 2400 : 6500;
     this.noteEl.innerHTML = ok
       ? `<span style="color:var(--good);font-weight:900;">Correct!</span> Error: <b>~${Math.round(dkm)} km</b>`
       : this.buildMissHtml(dkm);

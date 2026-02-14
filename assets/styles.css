@@ -193,3 +193,16 @@ hr.sep{border:none;border-top:1px solid var(--border); margin:14px 0;}
 .rowline{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-top:1px solid rgba(255,255,255,0.08); }
 .rowline:first-child{ border-top:none; }
 .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; letter-spacing:0.2px; }
+
+
+.map-prompt{display:flex;align-items:center;gap:10px;margin:10px 0 6px 0;}
+.map-prompt-text{font-size:18px;font-weight:700;}
+.map-hint{margin:0 0 10px 0;color:rgba(255,255,255,0.75);font-size:13px;}
+.badge{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);font-weight:800;min-width:64px;}
+.lb-actions{display:flex;gap:10px;margin:10px 0;}
+.lb-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;}
+.lb-row{display:grid;grid-template-columns:60px 1fr 80px 110px;gap:10px;align-items:center;padding:8px 10px;border:1px solid rgba(255,255,255,0.12);border-radius:10px;background:rgba(0,0,0,0.18);}
+.lb-rank{font-weight:800;opacity:0.85;}
+.lb-name{font-weight:700;}
+.lb-score{font-weight:900;text-align:right;}
+.lb-mode{text-align:right;opacity:0.85;}

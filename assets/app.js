@@ -5,6 +5,7 @@ import { MapQuiz } from './mapquiz.js';
 import { Drill } from './drill.js';
 import { Stats } from './stats.js';
 import { storage } from './storage.js';
+import { Leaderboard } from './leaderboard.js';
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -58,6 +59,8 @@ async function boot(){
   setStatus('Loading dataset…');
   state.dataset = await loadDataset();
   state.stats = new Stats(storage);
+  state.leaderboard = new Leaderboard();
+  state.leaderboard.refresh();
   state.srs = new SRS(storage, state.stats);
   state.rapid = new RapidFire(storage, state.stats);
   state.map = new MapQuiz(storage, state.stats);
