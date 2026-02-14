@@ -122,6 +122,8 @@ export class RapidFire{
       this.showFeedback(false, a, correctRaw, guess);
       setTimeout(()=> this.next(), 1800);
     }
+  }
+
   showFeedback(isOk, a, correctRaw, guess){
     if (!this.feedbackEl) return;
     const pills = [];
@@ -141,8 +143,6 @@ export class RapidFire{
       <div style="font-weight:900;font-size:18px;line-height:1.2;">${lead} Correct: <span class="mono">${correctTxt}</span></div>
       <div class="smallmuted" style="margin-top:6px;">Your input: <span class="mono">${guessTxt}</span> • ${escapeHtml(prettyAirport(a))}</div>
     `;
-  }
-
   }
 }
 
