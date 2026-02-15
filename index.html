@@ -9,57 +9,195 @@
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 </head>
 <body>
- <div class="grid grid-2col">
-  <div class="maincol">
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="title">icao-iata-trainer</div>
+        <div class="sub">SRS • Rapid-Fire • Map Quiz • Packs (Global + Wizz)</div>
+      </div>
 
-    <!-- a meglévő kártyáid maradhatnak itt -->
-    <!-- NEM kell mindent átírni: csak tedd bele ide a mostani card-jaidat -->
-    <!-- Kezdés: -->
-    <div class="card">
-      <!-- a mostani Progress/Home kártyád teljes tartalmát hagyd itt -->
+      <div class="controls">
+        <select id="packSelect" title="Pack"></select>
+        <button class="ghost" id="btn-home">Home</button>
+        <button class="ghost" id="btn-srs">Learn</button>
+        <button class="ghost" id="btn-rapid">Rapid</button>
+        <button class="ghost" id="btn-map">Map</button>
+        <button class="ghost" id="btn-drill">Drill</button>
+        <button id="btn-reset" class="ghost" title="Reset progress">Reset</button>
+      </div>
     </div>
 
-    <!-- a mostani data-view="home/srs/rapid/map/drill" card-jaid is maradhatnak itt -->
-    <!-- Vége -->
+    <div style="margin-top:10px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <div class="badge">Mode: <span id="mode-badge">HOME</span></div>
+      <div class="badge">Pack: <span id="packName">—</span> • Pool: <span id="poolCount">0</span></div>
+      <div class="badge">Status: <span id="status">—</span></div>
+    </div>
 
+    <div id="datasetNote" style="margin-top:12px; display:none;"></div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-h">
+          <h2>Progress</h2>
+          <span class="badge">localStorage</span>
+        </div>
+        <div class="card-b">
+          <div class="kpis">
+            <div class="kpi"><div class="v" id="kpi-streak">0</div><div class="l">Streak</div></div>
+            <div class="kpi"><div class="v" id="kpi-acc">0%</div><div class="l">Accuracy</div></div>
+            <div class="kpi"><div class="v" id="kpi-seen">0</div><div class="l">Answered</div></div>
+          </div>
+
+          <hr class="sep" />
+
+          <div class="mode-buttons">
+            <button class="primary" id="btn-srs-2">Learn <span class="hint">SRS flashcards</span></button>
+            <button class="primary" id="btn-rapid-2">Rapid <span class="hint">60s drill</span></button>
+            <button class="primary" id="btn-map-2">Map <span class="hint">blind map</span></button>
+          </div>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', ()=>{
+              const click = (id, target) => document.getElementById(id).addEventListener('click', ()=>document.getElementById(target).click());
+              click('btn-srs-2','btn-srs');
+              click('btn-rapid-2','btn-rapid');
+              click('btn-map-2','btn-map');
+            });
+          </script>
+
+          <hr class="sep" />
+          <div class="notice">
+            Tip: once uploaded, run <b>Actions → Build OurAirports dataset</b> to enable <b>Global</b> pack + real airport names/coordinates.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" data-view="home">
+          <div class="card-h"><h2>Home</h2><span class="badge">Quick start</span></div>
+          <div class="card-b">
+            <div class="big">Pick a mode.</div>
+            <div class="smallmuted" style="margin-top:6px;">
+              Your uploaded lists are already included:
+              <b>159</b> Wizz network ICAOs and <b>35</b> base IATAs.
+            </div>
+            <hr class="sep" />
+            <div class="notice">
+              <b>Map Quiz</b> needs coordinates (built automatically from OurAirports). SRS/Rapid work immediately with codes.
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-view="srs" style="display:none;">
+          <div class="card-h"><h2>Learn (SRS)</h2><span class="badge">Again/Hard/Good/Easy</span></div>
+          <div class="card-b">
+            <div class="big" id="srs-q">—</div>
+            <div class="smallmuted" id="srs-sub" style="margin-top:6px;">—</div>
+
+            <div class="row" style="margin-top:10px;">
+              <input id="srs-input" class="answer" placeholder="Type your answer…" autocomplete="off" />
+            </div>
+
+            <div class="row" style="margin-top:10px;">
+              <button class="primary" id="srs-show">Show</button>
+            </div>
+
+            <div id="srs-reveal" style="display:none; margin-top:12px;">
+              <div id="srs-answer"></div>
+            </div>
+
+            <div class="actions" id="srs-grades" style="display:none; margin-top:12px;">
+              <button class="bad" data-grade="again">Again</button>
+              <button data-grade="hard">Hard</button>
+              <button class="good" data-grade="good">Good</button>
+              <button class="good" data-grade="easy">Easy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-view="rapid" style="display:none;">
+          <div class="card-h"><h2>Rapid-Fire</h2><span class="badge">60s</span></div>
+          <div class="card-b">
+            <div class="big" id="rapid-q">—</div>
+            <div class="smallmuted" id="rapid-sub" style="margin-top:6px;">—</div>
+            <div class="row" style="margin-top:10px;">
+              <input id="rapid-input" class="answer" placeholder="Type and hit Enter…" autocomplete="off" />
+            </div>
+            <div class="row" style="margin-top:10px;">
+              <button class="primary" id="rapid-start">Start</button>
+              <button class="ghost" id="rapid-stop" disabled>Stop</button>
+              <button class="ghost" id="rapid-submit">Submit</button>
+            </div>
+            <div class="notice" style="margin-top:12px;" id="rapid-meta">Score: 0</div>
+            <div class="notice" style="margin-top:10px; display:none;" id="rapid-feedback"></div>
+          </div>
+        </div>
+
+        <div class="card" data-view="map" style="display:none;">
+          <div class="card-h"><h2>Map Quiz</h2><span class="badge">blind map</span></div>
+          <div class="card-b">
+            <div class="big" id="map-q">—</div>
+            <div class="smallmuted" id="map-sub" style="margin-top:6px;">—</div>
+            <div id="map-note" class="notice" style="margin-top:10px;"></div>
+            <div class="row" style="margin-top:10px; gap:10px; flex-wrap:wrap; align-items:center;">
+              <label class="smallmuted" style="min-width:44px;">Mode</label>
+              <select id="map-mode" style="min-width:220px;">
+                <option value="practice">Practice (auto-next)</option>
+                <option value="sprint60">Sprint 60s (countdown)</option>
+                <option value="set30">Set of 30 (final stats)</option>
+              </select>
+          <select id="map-prompt-type" class="select">
+            <option value="mixed">MIXED</option>
+            <option value="icao">ICAO</option>
+            <option value="iata">IATA</option>
+            <option value="city">CITY</option>
+            <option value="name">NAME</option>
+          </select>
+              <button id="map-start" class="primary">Start</button>
+              <span id="map-timer" class="badge" style="display:none;">—</span>
+            </div>
+            <div id="map-summary" class="notice" style="margin-top:10px; display:none;"></div>
+            <div style="margin-top:12px;" id="map"></div>
+            <div class="row" style="margin-top:10px;">
+              <button class="ghost" id="map-next">Next</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          Data build source: OurAirports (public domain). Map tiles: © OpenStreetMap contributors.
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="sidebar">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-    <div class="card" id="history">
-      <div class="card-h">
-        <h2>History</h2>
-        <span class="badge">this run</span>
+  
+    <div class="view" data-view="drill" style="display:none;">
+      <div class="card">
+        <div class="cardtitle">Targeted Drill</div>
+        <div class="smallmuted">This mode learns from your mistakes and confusions. Do some rounds in Learn/Rapid first.</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+          <button id="btn-drill-mistakes">Start Mistakes Drill (Rapid)</button>
+          <button class="ghost" id="btn-export" title="Downloads: mistakes.csv + confusions.csv">Export CSV</button>
+          <button class="ghost" id="btn-clear-perf" title="Clear mistakes & confusions">Clear Drill Data</button>
+        </div>
       </div>
-      <div class="card-b">
-        <div id="history-meta" class="smallmuted">—</div>
-        <div id="history-list" class="history"></div>
-        <div class="row" style="margin-top:10px;">
-          <button class="ghost" id="history-clear">Clear</button>
+
+      <div class="grid2" style="margin-top:12px;">
+        <div class="card">
+          <div class="cardtitle">Top confusions</div>
+          <div id="drill-topconf"></div>
+        </div>
+        <div class="card">
+          <div class="cardtitle">Most missed airports</div>
+          <div id="drill-mistakes"></div>
         </div>
       </div>
     </div>
 
-    <div class="card" id="leaderboard" style="margin-top:14px;">
-      <div class="card-h">
-        <h2>Scoreboard</h2>
-        <span class="badge">shared</span>
-      </div>
-      <div class="card-b">
-        <div class="row" style="gap:10px; flex-wrap:wrap; align-items:center;">
-          <button class="ghost" id="lb-refresh">Refresh</button>
-          <button class="primary" id="lb-submit">Submit last run</button>
-          <span class="smallmuted" id="lb-status">—</span>
-        </div>
-        <div id="lb-list" style="margin-top:10px;"></div>
-        <div class="smallmuted" style="margin-top:10px;">
-          Uses GitHub Issues (no backend).
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
 <script type="module">
     // Cache-bust + friendly error if files are missing
     import('./assets/app.js?v=3.1.0')

@@ -3,19 +3,19 @@
     {
       "id": "global",
       "name": "Global (all airports)",
-      "description": "All airports from OurAirports airports.csv",
+      "description": "Full OurAirports dataset (built by GitHub Actions).",
       "filter": "all"
     },
     {
       "id": "wizz-network",
       "name": "Wizz Network (ICAO list)",
-      "description": "Matches your airports.txt list (ICAO). Count: 159",
+      "description": "Airports from your airports.txt (ICAO list).",
       "filter": "tag:wizz-network"
     },
     {
       "id": "wizz-bases",
       "name": "Wizz Bases (IATA list)",
-      "description": "Matches your base.txt list (IATA). Count: 35",
+      "description": "Bases from your base.txt (IATA list).",
       "filter": "tag:wizz-base"
     }
   ]
