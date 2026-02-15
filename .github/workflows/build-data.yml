@@ -1,38 +1,24 @@
-name: Build OurAirports dataset
-
+name: Build airport data
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "data/wizz_network_icao.txt"
-      - "data/wizz_bases_iata.txt"
-      - "tools/build_airports.py"
-      - ".github/workflows/build-data.yml"
   schedule:
-    - cron: "17 3 * * *"
-
+    - cron: "17 2 * * *"
 permissions:
   contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build dataset
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Build airports.min.json
+        run: node tools/build-data.mjs
+      - name: Commit data if changed
         run: |
-          python3 tools/build_airports.py
-
-      - name: Commit updated data (if changed)
-        run: |
-          if git status --porcelain | grep -E "data/airports.min.json|data/packs.json"; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add data/airports.min.json data/packs.json
-            git commit -m "Update airports dataset"
-            git push
-          else
-            echo "No data changes to commit."
-          fi
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/airports.min.json
+          git diff --cached --quiet || git commit -m "Update airports.min.json"
+          git push
