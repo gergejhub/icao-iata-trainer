@@ -6,6 +6,7 @@ export class History {
     this.items = [];
     this.mode = '';
     this.btnClear?.addEventListener('click', ()=> this.clear());
+    this.render();
   }
 
   startRun(modeLabel){
