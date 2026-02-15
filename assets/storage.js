@@ -2,21 +2,12 @@ export const storage = {
   get(key, fallback=null){
     try{
       const v = localStorage.getItem(key);
-      return v === null ? fallback : JSON.parse(v);
-    }catch(_){
-      return fallback;
-    }
+      if(v===null||v===undefined) return fallback;
+      return JSON.parse(v);
+    }catch(e){ return fallback; }
   },
-  set(key, val){
-    localStorage.setItem(key, JSON.stringify(val));
+  set(key, value){
+    try{ localStorage.setItem(key, JSON.stringify(value)); }catch(e){}
   },
-  del(key){ localStorage.removeItem(key); },
-  clearPrefix(prefix){
-    const keys=[];
-    for (let i=0;i<localStorage.length;i++){
-      const k = localStorage.key(i);
-      if (k && k.startsWith(prefix)) keys.push(k);
-    }
-    for (const k of keys) localStorage.removeItem(k);
-  }
+  del(key){ try{ localStorage.removeItem(key);}catch(e){} }
 };

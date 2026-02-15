@@ -1,152 +1,188 @@
-import { norm, pick, prettyAirport, nameMatch } from './utils.js';
-import { perf } from './perf.js';
+import { eqAnswer, pick, shuffleInPlace } from './utils.js';
 
-export class RapidFire{
-  constructor(storage, stats){
-    this.customTitle = null;
-    this.storage = storage;
+export class Rapid {
+  constructor(stats, history, leaderboard){
     this.stats = stats;
-    this.pool = [];
-    this.timer = null;
-    this.timeLeft = 60;
-    this.score = 0;
-    this.current = null;
-    this.qType = null;
-    this.bindUI();
-  }
-  setPool(pool){ this.pool = pool; }
-  setCustomTitle(t){ this.customTitle = t; }
-  reset(){}
+    this.history = history;
+    this.leaderboard = leaderboard;
 
-  bindUI(){
-    this.qEl = document.querySelector('#rapid-q');
-    this.subEl = document.querySelector('#rapid-sub');
-    this.inEl = document.querySelector('#rapid-input');
-    this.metaEl = document.querySelector('#rapid-meta');
-    this.feedbackEl = document.querySelector('#rapid-feedback');
-    this.btnStart = document.querySelector('#rapid-start');
-    this.btnStop = document.querySelector('#rapid-stop');
-    this.btnStart.addEventListener('click', ()=> this.start());
-    this.btnStop.addEventListener('click', ()=> this.stop());
-    this.inEl.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') this.submit(); });
-    document.querySelector('#rapid-submit').addEventListener('click', ()=> this.submit());
+    this.pool = [];
+    this.mode = 'sprint60';
+    this.prompt = 'mixed';
+    this.awaitNext = false;
+    this.current = null;
+    this.expectedType = null;
+
+    this.modeSel = document.getElementById('rapid-mode');
+    this.promptSel = document.getElementById('rapid-prompt');
+    this.startBtn = document.getElementById('rapid-start');
+    this.qEl = document.getElementById('rapid-q');
+    this.subEl = document.getElementById('rapid-sub');
+    this.inputEl = document.getElementById('rapid-input');
+    this.timeEl = document.getElementById('rapid-time');
+    this.okEl = document.getElementById('rapid-ok');
+    this.badEl = document.getElementById('rapid-bad');
+
+    this.startBtn?.addEventListener('click', ()=> this.startRun());
+    this.modeSel?.addEventListener('change', ()=> this.mode=this.modeSel.value);
+    this.promptSel?.addEventListener('change', ()=> this.prompt=this.promptSel.value);
+
+    this.inputEl?.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        this.onEnter();
+      }
+    });
+
+    this.timer = null;
+    this.running = false;
+    this.tLeft = 0;
+    this.targetN = 30;
+    this.asked = 0;
+    this.correct = 0;
+    this.wrong = 0;
+  }
+
+  setPool(pool){
+    this.pool = Array.isArray(pool)? pool.slice(): [];
+    shuffleInPlace(this.pool);
   }
 
   start(){
-    this.stop();
-    this.timeLeft = 60;
-    this.score = 0;
-    this.inEl.value='';
-    this.next();
-    this.tick();
-    this.timer = setInterval(()=>this.tick(), 1000);
-    this.btnStart.disabled = true;
-    this.btnStop.disabled = false;
+    this.running = false;
+    this.qEl.textContent = 'Pick mode + prompt, press Start';
+    this.subEl.textContent = '';
+    this.inputEl.value = '';
+    this.timeEl.textContent = '—';
   }
 
-  stop(){
-    if (this.timer) clearInterval(this.timer);
-    this.timer = null;
-    this.btnStart.disabled = false;
-    this.btnStop.disabled = true;
-    this.metaEl.textContent = `Score: ${this.score}`;
-    if (this.feedbackEl){ this.feedbackEl.style.display='none'; this.feedbackEl.textContent=''; }
+  startRun(){
+    if(!this.pool.length){
+      this.qEl.textContent = 'No airports in this pack (sample DB).';
+      this.subEl.textContent = 'Run the GitHub Action to build full dataset.';
+      return;
+    }
+    this.running = true;
+    this.awaitNext = false;
+    this.asked = 0;
+    this.correct = 0;
+    this.wrong = 0;
+    this.okEl.textContent = '0';
+    this.badEl.textContent = '0';
+    this.inputEl.value = '';
+    this.inputEl.focus();
+
+    if(this.mode==='sprint60'){
+      this.tLeft = 60;
+      this.timeEl.textContent = String(this.tLeft);
+      clearInterval(this.timer);
+      this.timer = setInterval(()=>{
+        this.tLeft -= 1;
+        this.timeEl.textContent = String(this.tLeft);
+        if(this.tLeft<=0){
+          this.finishRun();
+        }
+      }, 1000);
+    }else{
+      this.timeEl.textContent = '—';
+      clearInterval(this.timer);
+      this.timer = null;
+      this.targetN = 30;
+    }
+
+    this.nextQuestion(true);
   }
 
-  tick(){
-    this.metaEl.textContent = `Time: ${this.timeLeft}s • Score: ${this.score}`;
-    this.timeLeft -= 1;
-    if (this.timeLeft < 0){
-      this.stop();
-      alert(`Time! Score: ${this.score}`);
+  finishRun(){
+    if(!this.running) return;
+    this.running = false;
+    if(this.timer){ clearInterval(this.timer); this.timer=null; }
+    const score = this.correct;
+    const modeLabel = this.mode==='sprint60' ? 'RAPID_SPRINT60_CITY' : 'RAPID_SET30_CITY';
+    const lastRun = { mode: modeLabel, score, correct: this.correct, wrong: this.wrong, timestamp: Date.now() };
+    this.leaderboard?.setLastRun(lastRun);
+    this.subEl.textContent = `Run finished. Score=${score}. Use Scoreboard → Submit last run.`;
+  }
+
+  onEnter(){
+    if(!this.running) return;
+    if(!this.current) return;
+
+    if(!this.awaitNext){
+      // Evaluate
+      const user = this.inputEl.value;
+      const expected = this.getExpectedAnswer(this.current, this.expectedType);
+      const ok = eqAnswer(user, expected);
+
+      this.stats.record(ok);
+      this.asked += 1;
+      if(ok) this.correct += 1; else this.wrong += 1;
+      this.okEl.textContent = String(this.correct);
+      this.badEl.textContent = String(this.wrong);
+
+      const title = `${this.badge()} | ${this.clueLabel(this.current)}`;
+      const detail = ok ? `OK: ${expected}` : `Your: ${user||'—'} • Correct: ${expected}`;
+      this.history.add({ok, title, detail});
+
+      this.subEl.textContent = ok ? '✅ Correct — press Enter for next' : '❌ Wrong — press Enter for next';
+      this.awaitNext = true;
+    }else{
+      // Next
+      this.awaitNext = false;
+      this.inputEl.value = '';
+      if(this.mode==='set30' && this.asked>=30){
+        this.finishRun();
+        return;
+      }
+      if(this.mode==='sprint60' && this.tLeft<=0){
+        this.finishRun();
+        return;
+      }
+      this.nextQuestion();
     }
   }
 
-  next(){
-    const a = pick(this.pool);
-    this.current = a;
-    this.qType = this.pickType(a);
-    const label = (this.qType === 'icao->iata') ? 'IATA?' :
-                  (this.qType === 'iata->icao') ? 'ICAO?' :
-                  (this.qType === 'code->name') ? 'Name (type 4+ chars)' :
-                  (this.qType === 'name->code') ? 'Code?' : 'Answer';
-    let q='';
-    if (this.qType === 'icao->iata') q = a.icao;
-    if (this.qType === 'iata->icao') q = a.iata;
-    if (this.qType === 'code->name') q = (a.icao || a.iata);
-    if (this.qType === 'name->code') q = a.name || '(name not yet available)';
-    this.qEl.textContent = q;
-    this.subEl.textContent = label;
-    this.inEl.value='';
-    this.inEl.focus();
+  badge(){
+    const t = this.expectedType;
+    if(t==='icao') return 'ICAO CODE';
+    if(t==='iata') return 'IATA CODE';
+    if(t==='city') return 'CITY';
+    if(t==='name') return 'AIRPORT NAME';
+    return 'ANSWER';
   }
 
-  pickType(a){
-    const types=[];
-    if (a.icao && a.iata) types.push('icao->iata','iata->icao');
-    if (a.icao || a.iata) types.push('code->name');
-    if (a.name && (a.icao || a.iata)) types.push('name->code');
-    return pick(types);
+  pickExpectedType(){
+    const m = this.prompt || 'mixed';
+    if(m!=='mixed') return m;
+    const opts = ['icao','iata','city','name'].filter(t=> this.getExpectedAnswer(this.current||{}, t));
+    return pick(opts.length?opts:['icao']);
   }
 
-  submit(){
-    if (!this.timer) return;
-    const a = this.current;
-    const guess = norm(this.inEl.value);
-    let correctRaw='';
-    let ok=false;
-
-    if (this.qType === 'icao->iata'){ correctRaw = a.iata || ''; ok = guess === norm(correctRaw); }
-    if (this.qType === 'iata->icao'){ correctRaw = a.icao || ''; ok = guess === norm(correctRaw); }
-    if (this.qType === 'code->name'){
-      correctRaw = a.name || '';
-      ok = !!correctRaw && nameMatch(this.inEl.value, correctRaw);
-    }
-    if (this.qType === 'name->code'){
-      correctRaw = a.icao || a.iata || '';
-      ok = guess === norm(correctRaw);
-    }
-
-    this.stats.answer(ok);
-    if (!ok){
-      perf.recordMistake(this.storage, a);
-      if (this.qType === 'icao->iata') perf.recordConfusion(this.storage, 'IATA', correctRaw, guess);
-      if (this.qType === 'iata->icao') perf.recordConfusion(this.storage, 'ICAO', correctRaw, guess);
-    }
-    if (ok){
-      this.score += 1;
-      this.showFeedback(true, a, correctRaw, guess);
-      setTimeout(()=> this.next(), 900);
-    } else {
-      this.score = Math.max(0, this.score-1);
-      this.showFeedback(false, a, correctRaw, guess);
-      setTimeout(()=> this.next(), 1800);
-    }
+  clueLabel(a){
+    const options = [];
+    if(this.expectedType!=='icao' && a.icao) options.push(`ICAO: ${a.icao}`);
+    if(this.expectedType!=='iata' && a.iata) options.push(`IATA: ${a.iata}`);
+    if(this.expectedType!=='city' && a.city) options.push(`CITY: ${a.city}`);
+    if(this.expectedType!=='name' && a.name) options.push(`NAME: ${a.name}`);
+    if(options.length) return pick(options);
+    if(a.name) return `NAME: ${a.name}`;
+    if(a.city) return `CITY: ${a.city}`;
+    if(a.iata) return `IATA: ${a.iata}`;
+    return `ICAO: ${a.icao||'—'}`;
   }
 
-  showFeedback(isOk, a, correctRaw, guess){
-    if (!this.feedbackEl) return;
-    const pills = [];
-    if ((a.tags||[]).includes('wizz-base')) pills.push('<span class="pill good">WIZZ BASE</span>');
-    if ((a.tags||[]).includes('wizz-network')) pills.push('<span class="pill">WIZZ NET</span>');
-    const lead = isOk ? '✅' : '❌';
-    const title = isOk ? 'Correct' : 'Not correct';
-    const correctTxt = correctRaw ? escapeHtml(correctRaw) : '—';
-    const guessTxt = escapeHtml((this.inEl.value||'').trim() || '—');
-    this.feedbackEl.style.display = 'block';
-    this.feedbackEl.innerHTML = `
-      <div class="pills" style="margin-bottom:8px;">
-        <span class="pill ${isOk?'good':'bad'}">${title}</span>
-        <span class="pill">${escapeHtml(a.icao || '—')} / ${escapeHtml(a.iata || '—')}</span>
-        ${pills.join(' ')}
-      </div>
-      <div style="font-weight:900;font-size:18px;line-height:1.2;">${lead} Correct: <span class="mono">${correctTxt}</span></div>
-      <div class="smallmuted" style="margin-top:6px;">Your input: <span class="mono">${guessTxt}</span> • ${escapeHtml(prettyAirport(a))}</div>
-    `;
+  nextQuestion(resetSub=false){
+    this.current = pick(this.pool);
+    this.expectedType = this.pickExpectedType();
+    this.qEl.textContent = `${this.badge()} ← ${this.clueLabel(this.current)}`;
+    if(resetSub) this.subEl.textContent = 'Type answer and press Enter';
   }
-}
 
-
-function escapeHtml(s){
-  return (s||'').toString().replace(/[&<>\"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  getExpectedAnswer(a, t){
+    if(t==='icao') return a.icao||'';
+    if(t==='iata') return a.iata||'';
+    if(t==='city') return a.city||'';
+    if(t==='name') return a.name||'';
+    return '';
+  }
 }

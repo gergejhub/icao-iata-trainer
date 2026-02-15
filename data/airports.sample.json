@@ -1,1 +1,272 @@
-{"generatedAt":"2026-02-14T08:06:52Z","source":"sample-from-user-lists","airports":[{"icao":"BIKF","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"BKPR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"GCFV","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"GCLP","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"GCTS","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"GMAD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"GMMN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"GMMX","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EBCI","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDDB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDDH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDDK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDDN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDDS","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDFH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDJA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDLW","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDNY","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EDSB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EETN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EFTU","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EGBB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EGGP","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EGGW","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EGKK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EGNM","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EGPD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EGPF","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EHBK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EHEH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EKBI","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EKCH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENAL","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENBR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENGM","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENHD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENTC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENTO","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENVA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ENZV","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPGD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPKK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPKT","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPLB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPMO","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPPO","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPRA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPRZ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPSC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPSY","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPWA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EPWR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ESGG","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ESKN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ESMS","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"ESSA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EYKA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EYPA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"EYVI","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"HEGN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"HEMA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"HESH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"HESX","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LATI","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LBPD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LBSF","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LBWN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LCLK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LCPH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEAL","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEBB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEBL","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LECH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEMD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEMG","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEVC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEXJ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEZG","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LEZL","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LFBD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LFLL","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LFLS","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LFMN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LFOB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LFPO","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LFSB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LGAV","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LGTS","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LHBP","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LHDC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIBD","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIBG","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIBP","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIBR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LICA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LICC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LICJ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIMC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIME","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIMF","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIMJ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIPE","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIPH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIPQ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIPR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIPX","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIPY","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIPZ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIRF","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIRN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIRP","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LIRZ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LJLJ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LKMT","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LKPR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LLBG","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LMML","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LOWW","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LPFR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LPMA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LPPR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LPPS","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LPPT","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LQBK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LQSA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LQTZ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRIA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRBC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRBS","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRBV","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRCL","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRCV","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LROP","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRSB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRSM","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRSV","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRTM","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LRTR","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LTAC","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LTFM","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LUKK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LWOH","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LWSK","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LYBE","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LYNI","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LYPG","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LZIB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LZKZ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"LZTT","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"OEJN","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"OEMA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"OJAI","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"OMAA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"OMDB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"UAAA","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"UBBB","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"UDSG","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"UDYZ","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":"UGKO","iata":null,"name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-network"]},{"icao":null,"iata":"LTN","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"LGW","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"WRO","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"CLJ","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"RMO","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"SBZ","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"TSR","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"IAS","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"KTW","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"TIA","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"BEG","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"OTP","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"FCO","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"GDN","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"CRA","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"LCA","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"WMI","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"VNO","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"BUD","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"WAW","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"KRK","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"VAR","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"SKP","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"BTS","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"SOF","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"VCE","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"VIE","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"CTA","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"MXP","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"POZ","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"EVN","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"SCV","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"TZL","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"KUT","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]},{"icao":null,"iata":"NAP","name":null,"city":null,"country":null,"lat":null,"lon":null,"tags":["wizz-base"]}]}
+[
+  {
+    "icao": "LHBP",
+    "iata": "BUD",
+    "name": "Budapest Ferenc Liszt International Airport",
+    "city": "Budapest",
+    "country": "HU",
+    "lat": 47.4369,
+    "lon": 19.2556
+  },
+  {
+    "icao": "EPWR",
+    "iata": "WRO",
+    "name": "Copernicus Airport Wroclaw",
+    "city": "Wroclaw",
+    "country": "PL",
+    "lat": 51.1027,
+    "lon": 16.8858
+  },
+  {
+    "icao": "EGGW",
+    "iata": "LTN",
+    "name": "London Luton Airport",
+    "city": "London",
+    "country": "GB",
+    "lat": 51.8747,
+    "lon": -0.3683
+  },
+  {
+    "icao": "EGKK",
+    "iata": "LGW",
+    "name": "London Gatwick Airport",
+    "city": "London",
+    "country": "GB",
+    "lat": 51.1537,
+    "lon": -0.1821
+  },
+  {
+    "icao": "LROP",
+    "iata": "OTP",
+    "name": "Henri Coanda International Airport",
+    "city": "Bucharest",
+    "country": "RO",
+    "lat": 44.5722,
+    "lon": 26.1022
+  },
+  {
+    "icao": "LRIA",
+    "iata": "IAS",
+    "name": "Iasi International Airport",
+    "city": "Iasi",
+    "country": "RO",
+    "lat": 47.1785,
+    "lon": 27.6206
+  },
+  {
+    "icao": "LUKK",
+    "iata": "RMO",
+    "name": "Chisinau International Airport",
+    "city": "Chisinau",
+    "country": "MD",
+    "lat": 46.9277,
+    "lon": 28.9309
+  },
+  {
+    "icao": "LBSF",
+    "iata": "SOF",
+    "name": "Sofia Airport",
+    "city": "Sofia",
+    "country": "BG",
+    "lat": 42.6967,
+    "lon": 23.4114
+  },
+  {
+    "icao": "LKPR",
+    "iata": "PRG",
+    "name": "Vaclav Havel Airport Prague",
+    "city": "Prague",
+    "country": "CZ",
+    "lat": 50.1008,
+    "lon": 14.2632
+  },
+  {
+    "icao": "EPMO",
+    "iata": "WMI",
+    "name": "Warsaw Modlin Airport",
+    "city": "Warsaw",
+    "country": "PL",
+    "lat": 52.4511,
+    "lon": 20.6518
+  },
+  {
+    "icao": "LTBA",
+    "iata": "IST",
+    "name": "Istanbul Ataturk Airport",
+    "city": "Istanbul",
+    "country": "TR",
+    "lat": 40.9769,
+    "lon": 28.8146
+  },
+  {
+    "icao": "LTAI",
+    "iata": "AYT",
+    "name": "Antalya Airport",
+    "city": "Antalya",
+    "country": "TR",
+    "lat": 36.8987,
+    "lon": 30.8005
+  },
+  {
+    "icao": "LCLK",
+    "iata": "LCA",
+    "name": "Larnaca International Airport",
+    "city": "Larnaca",
+    "country": "CY",
+    "lat": 34.8751,
+    "lon": 33.6249
+  },
+  {
+    "icao": "GCLP",
+    "iata": "LPA",
+    "name": "Gran Canaria Airport",
+    "city": "Las Palmas",
+    "country": "ES",
+    "lat": 27.9319,
+    "lon": -15.3866
+  },
+  {
+    "icao": "GCTS",
+    "iata": "TFS",
+    "name": "Tenerife South Airport",
+    "city": "Tenerife",
+    "country": "ES",
+    "lat": 28.0445,
+    "lon": -16.5725
+  },
+  {
+    "icao": "EDDB",
+    "iata": "BER",
+    "name": "Berlin Brandenburg Airport",
+    "city": "Berlin",
+    "country": "DE",
+    "lat": 52.3667,
+    "lon": 13.5033
+  },
+  {
+    "icao": "EHAM",
+    "iata": "AMS",
+    "name": "Amsterdam Airport Schiphol",
+    "city": "Amsterdam",
+    "country": "NL",
+    "lat": 52.3086,
+    "lon": 4.7639
+  },
+  {
+    "icao": "LOWW",
+    "iata": "VIE",
+    "name": "Vienna International Airport",
+    "city": "Vienna",
+    "country": "AT",
+    "lat": 48.1103,
+    "lon": 16.5697
+  },
+  {
+    "icao": "LIRF",
+    "iata": "FCO",
+    "name": "Rome Fiumicino Airport",
+    "city": "Rome",
+    "country": "IT",
+    "lat": 41.8003,
+    "lon": 12.2389
+  },
+  {
+    "icao": "LEBL",
+    "iata": "BCN",
+    "name": "Barcelona El Prat Airport",
+    "city": "Barcelona",
+    "country": "ES",
+    "lat": 41.2974,
+    "lon": 2.0833
+  },
+  {
+    "icao": "LPPT",
+    "iata": "LIS",
+    "name": "Lisbon Humberto Delgado Airport",
+    "city": "Lisbon",
+    "country": "PT",
+    "lat": 38.7742,
+    "lon": -9.1342
+  },
+  {
+    "icao": "EKCH",
+    "iata": "CPH",
+    "name": "Copenhagen Airport",
+    "city": "Copenhagen",
+    "country": "DK",
+    "lat": 55.618,
+    "lon": 12.656
+  },
+  {
+    "icao": "ENTO",
+    "iata": "TRF",
+    "name": "Sandefjord Airport Torp",
+    "city": "Oslo",
+    "country": "NO",
+    "lat": 59.1867,
+    "lon": 10.2586
+  },
+  {
+    "icao": "ESMS",
+    "iata": "MMX",
+    "name": "Malmo Airport",
+    "city": "Malmo",
+    "country": "SE",
+    "lat": 55.5363,
+    "lon": 13.3762
+  },
+  {
+    "icao": "LEAL",
+    "iata": "ALC",
+    "name": "Alicante-Elche Airport",
+    "city": "Alicante",
+    "country": "ES",
+    "lat": 38.2822,
+    "lon": -0.5582
+  },
+  {
+    "icao": "GMMN",
+    "iata": "CMN",
+    "name": "Casablanca Mohammed V International Airport",
+    "city": "Casablanca",
+    "country": "MA",
+    "lat": 33.3675,
+    "lon": -7.5899
+  },
+  {
+    "icao": "BIKF",
+    "iata": "KEF",
+    "name": "Keflavik International Airport",
+    "city": "Reykjavik",
+    "country": "IS",
+    "lat": 63.985,
+    "lon": -22.6056
+  },
+  {
+    "icao": "EBCI",
+    "iata": "CRL",
+    "name": "Brussels South Charleroi Airport",
+    "city": "Charleroi",
+    "country": "BE",
+    "lat": 50.4592,
+    "lon": 4.4538
+  },
+  {
+    "icao": "EDDF",
+    "iata": "FRA",
+    "name": "Frankfurt am Main Airport",
+    "city": "Frankfurt",
+    "country": "DE",
+    "lat": 50.0379,
+    "lon": 8.5622
+  },
+  {
+    "icao": "LFPG",
+    "iata": "CDG",
+    "name": "Paris Charles de Gaulle Airport",
+    "city": "Paris",
+    "country": "FR",
+    "lat": 49.0097,
+    "lon": 2.5479
+  }
+]

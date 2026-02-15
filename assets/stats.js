@@ -1,42 +1,26 @@
-export class Stats{
-  constructor(storage){
-    this.storage = storage;
-    this.listeners = [];
-    this.load();
-  }
-  onChange(fn){ this.listeners.push(fn); }
-  emit(){ for (const fn of this.listeners) fn(); }
+import { storage } from './storage.js';
 
-  load(){
-    this.totalAnswered = this.storage.get('stats:totalAnswered',0);
-    this.totalCorrect  = this.storage.get('stats:totalCorrect',0);
-    this.streak        = this.storage.get('stats:streak',0);
-    this.bestStreak    = this.storage.get('stats:bestStreak',0);
+export class Stats {
+  constructor(){
+    this.key = 'overallStats';
+    this.data = storage.get(this.key, {total:0, correct:0, wrong:0});
+    this.listeners = new Set();
   }
-  save(){
-    this.storage.set('stats:totalAnswered', this.totalAnswered);
-    this.storage.set('stats:totalCorrect', this.totalCorrect);
-    this.storage.set('stats:streak', this.streak);
-    this.storage.set('stats:bestStreak', this.bestStreak);
+  onChange(fn){ this.listeners.add(fn); }
+  emit(){ for(const fn of this.listeners) fn(this.snapshot()); }
+  snapshot(){
+    const {total, correct, wrong} = this.data;
+    return { total, correct, wrong, accuracy: total? (correct/total):0 };
+  }
+  record(ok){
+    this.data.total += 1;
+    if(ok) this.data.correct += 1; else this.data.wrong += 1;
+    storage.set(this.key, this.data);
     this.emit();
   }
   reset(){
-    this.totalAnswered=0; this.totalCorrect=0; this.streak=0; this.bestStreak=0;
-    this.save();
-  }
-  answer(isCorrect){
-    this.totalAnswered += 1;
-    if (isCorrect){
-      this.totalCorrect += 1;
-      this.streak += 1;
-      this.bestStreak = Math.max(this.bestStreak, this.streak);
-    } else {
-      this.streak = 0;
-    }
-    this.save();
-  }
-  snapshot(){
-    const acc = this.totalAnswered ? Math.round((this.totalCorrect/this.totalAnswered)*100) : 0;
-    return { totalAnswered:this.totalAnswered, totalCorrect:this.totalCorrect, accuracyPct: acc, streak: this.streak, bestStreak: this.bestStreak };
+    this.data = {total:0, correct:0, wrong:0};
+    storage.set(this.key, this.data);
+    this.emit();
   }
 }

@@ -1,73 +1,52 @@
-export async function loadDataset(){
-  const enriched = await tryFetchJson('./data/airports.min.json');
-  const sample = await tryFetchJson('./data/airports.sample.json');
+import { storage } from './storage.js';
 
-  let ds = enriched || sample;
-  if (!ds) throw new Error('No dataset found (airports.min.json nor airports.sample.json).');
-
-  const packs = await tryFetchJson('./data/packs.json');
-  ds.packs = packs?.packs || [
-    {id:'global', name:'Global', description:'All airports', filter:'all'},
-    {id:'wizz-network', name:'Wizz Network', description:'ICAO list', filter:'tag:wizz-network'},
-    {id:'wizz-bases', name:'Wizz Bases', description:'IATA list', filter:'tag:wizz-base'},
-  ];
-
-  ds.byICAO = {};
-  ds.byIATA = {};
-  for (const a of ds.airports){
-    if (a.icao) ds.byICAO[a.icao] = a;
-    if (a.iata) ds.byIATA[a.iata] = a;
-  }
-  return ds;
+async function fetchText(url){
+  const r = await fetch(url, { cache: 'no-store' });
+  if(!r.ok) throw new Error(`Failed to fetch ${url}: ${r.status}`);
+  return await r.text();
 }
 
-async function tryFetchJson(url){
+async function fetchJson(url){
+  const r = await fetch(url, { cache: 'no-store' });
+  if(!r.ok) throw new Error(`Failed to fetch ${url}: ${r.status}`);
+  return await r.json();
+}
+
+export async function loadAllData(){
+  const packs = await fetchJson('./data/packs.json');
+
+  // Prefer the full dataset if Actions generated it.
+  let dbAirports;
   try{
-    const r = await fetch(url, {cache:'no-store'});
-    if (!r.ok) return null;
-    return await r.json();
-  }catch(_){
-    return null;
+    dbAirports = await fetchJson('./data/airports.min.json');
+  }catch(e){
+    dbAirports = await fetchJson('./data/airports.sample.json');
   }
+
+  const lists = {};
+  for(const p of packs.packs){
+    if(p.filter?.file){
+      const txt = await fetchText(`./data/${p.filter.file}`);
+      lists[p.filter.file] = txt.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    }
+  }
+
+  return { packs: packs.packs, airports: dbAirports, lists };
 }
 
-export function getPackFilter(packId, dataset){
-  const p = dataset.packs.find(x=>x.id===packId);
-  const f = p?.filter || 'all';
-  if (f === 'all') return ()=>true;
-  if (f.startsWith('tag:')){
-    const tag = f.slice(4);
-    return (a)=> Array.isArray(a.tags) && a.tags.includes(tag);
-  }
-  return ()=>true;
-}
+export function buildPool(db, packId){
+  const pack = db.packs.find(p=>p.id===packId) || db.packs[0];
+  const f = pack.filter || {type:'all'};
+  let pool = db.airports;
 
-export function makeAirportPool(dataset, filterFn){
-  const pool = dataset.airports.filter(a => (a.icao || a.iata) && filterFn(a));
-  const seed = new Date().toISOString().slice(0,10);
-  return shuffle(pool, hash(seed));
-}
+  if(f.type==='icao_list'){
+    const icaos = new Set((db.lists[f.file]||[]).map(x=>x.toUpperCase()));
+    pool = db.airports.filter(a=>a.icao && icaos.has(a.icao.toUpperCase()));
+  }else if(f.type==='iata_list'){
+    const iatas = new Set((db.lists[f.file]||[]).map(x=>x.toUpperCase()));
+    pool = db.airports.filter(a=>a.iata && iatas.has(a.iata.toUpperCase()));
+  }
 
-function shuffle(arr, seed){
-  const out = arr.slice();
-  let x = seed >>> 0;
-  function rnd(){
-    x ^= x << 13; x >>>= 0;
-    x ^= x >> 17; x >>>= 0;
-    x ^= x << 5;  x >>>= 0;
-    return (x >>> 0) / 4294967296;
-  }
-  for (let i=out.length-1;i>0;i--){
-    const j = Math.floor(rnd()*(i+1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
-function hash(str){
-  let h = 2166136261;
-  for (let i=0;i<str.length;i++){
-    h ^= str.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return h >>> 0;
+  storage.set('packId', pack.id);
+  return { pack, pool };
 }

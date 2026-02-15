@@ -1,55 +1,40 @@
-export function norm(s){
-  return (s||'').toString().trim().toUpperCase();
+export function normalize(s){
+  if(s===null||s===undefined) return '';
+  return String(s)
+    .normalize('NFD')
+    .replace(/\p{Diacritic}+/gu,'')
+    .replace(/[^a-zA-Z0-9 ]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim()
+    .toLowerCase();
 }
 
-/**
- * Normalize free-text (airport names/cities) so the user doesn't need to type diacritics
- * or punctuation exactly (e.g. Łódź == Lodz, José == Jose).
- */
-export function normLoose(s){
-  const raw = (s||'').toString().trim();
-  if (!raw) return '';
-  // Common special letters that don't always decompose nicely with NFD
-  const pre = raw
-    .replace(/ß/g, 'ss')
-    .replace(/Æ/g, 'AE').replace(/æ/g, 'ae')
-    .replace(/Œ/g, 'OE').replace(/œ/g, 'oe')
-    .replace(/Ø/g, 'O').replace(/ø/g, 'o')
-    .replace(/Đ/g, 'D').replace(/đ/g, 'd')
-    .replace(/Ł/g, 'L').replace(/ł/g, 'l')
-    .replace(/Þ/g, 'TH').replace(/þ/g, 'th');
-  const noDia = pre.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  return noDia
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+export function eqAnswer(user, expected){
+  const a = normalize(user);
+  const b = normalize(expected);
+  return a.length>0 && a===b;
 }
 
-export function nameMatch(guessRaw, targetRaw){
-  const guess = normLoose(guessRaw);
-  const target = normLoose(targetRaw);
-  if (!guess || !target) return false;
-  return guess.length >= 4 && target.includes(guess);
+export function kmDistance(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const toRad = d => d*Math.PI/180;
+  const dLat = toRad(lat2-lat1);
+  const dLon = toRad(lon2-lon1);
+  const s1 = Math.sin(dLat/2);
+  const s2 = Math.sin(dLon/2);
+  const aa = s1*s1 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*s2*s2;
+  const c = 2*Math.atan2(Math.sqrt(aa), Math.sqrt(1-aa));
+  return R*c;
 }
 
-export function prettyAirport(a){
-  const parts=[];
-  if (a.name) parts.push(a.name);
-  const loc = [a.city,a.country].filter(Boolean).join(', ');
-  if (loc) parts.push(loc);
-  return parts.join(' — ') || '(name not yet available)';
-}
 export function pick(arr){
   return arr[Math.floor(Math.random()*arr.length)];
 }
-export function hasGeo(a){
-  return typeof a.lat === 'number' && typeof a.lon === 'number';
-}
-export function kmDistance(lat1,lon1,lat2,lon2){
-  const R = 6371;
-  const dLat = (lat2-lat1)*Math.PI/180;
-  const dLon = (lon2-lon1)*Math.PI/180;
-  const sa = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return 2*R*Math.asin(Math.min(1,Math.sqrt(sa)));
+
+export function shuffleInPlace(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
 }
