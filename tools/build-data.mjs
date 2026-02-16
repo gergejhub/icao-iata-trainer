@@ -4,6 +4,7 @@ import { createInterface } from 'node:readline';
 
 const SRC = process.env.AIRPORTS_CSV_URL || 'https://davidmegginson.github.io/ourairports-data/airports.csv';
 const OUT = 'data/airports.min.json';
+const LIST_FILE = process.env.ICAO_LIST_FILE || 'data/wizz_network_icao.txt';
 
 function download(url, dest){
   return new Promise((resolve, reject)=>{
@@ -43,6 +44,19 @@ async function main(){
   console.log('Downloading', SRC);
   await download(SRC, 'airports.csv');
 
+  // Filter: keep only ICAOs listed in LIST_FILE (default: Wizz network)
+  let onlySet = null;
+  try{
+    if(fs.existsSync(LIST_FILE)){
+      const lines = fs.readFileSync(LIST_FILE, 'utf8').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+      onlySet = new Set(lines.map(s=>s.toUpperCase()));
+      console.log('Filtering by ICAO list:', LIST_FILE, '(', onlySet.size, 'ICAOs )');
+    }
+  }catch(e){
+    console.warn('Could not read ICAO list file:', LIST_FILE, e?.message||e);
+  }
+
+
   const rl = createInterface({ input: fs.createReadStream('airports.csv', {encoding:'utf8'})});
   let header = null;
   const rows = [];
@@ -63,12 +77,13 @@ async function main(){
     const type = (rec.type||'').trim();
 
     if(!ident || ident.length!==4) continue;
+    if(onlySet && !onlySet.has(ident)) continue;
     if(!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
     if(!['large_airport','medium_airport','small_airport'].includes(type)) continue;
 
     rows.push({ icao: ident, iata: (iata && iata!=='\\N')? iata : '', name, city, country, lat, lon });
   }
   fs.writeFileSync(OUT, JSON.stringify(rows));
-  console.log('Wrote', OUT, rows.length, 'airports');
+  console.log('Wrote', OUT, rows.length, 'airports (filtered)');
 }
 main().catch(e=>{ console.error(e); process.exit(1);});

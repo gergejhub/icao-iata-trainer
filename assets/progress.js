@@ -67,8 +67,6 @@ export const learningPath = {
     'region-dach': { prereq: 'wizz-network', recentN: 40, acc: 0.80 },
     'region-italy': { prereq: 'wizz-network', recentN: 40, acc: 0.80 },
     'region-fr': { prereq: 'wizz-network', recentN: 40, acc: 0.80 },
-    // Global unlock after regions OR directly after Wizz Network (keep it reachable)
-    'global': { prereq: 'wizz-network', recentN: 60, acc: 0.80 }
   },
 
   // Packs that should always remain selectable even when locked (e.g. review packs)

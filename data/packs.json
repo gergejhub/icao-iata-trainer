@@ -1,101 +1,198 @@
 {
   "packs": [
     {
-      "id": "global",
-      "name": "Global (all airports)",
-      "description": "All airports from OurAirports airports.csv",
-      "filter": {"type":"all"}
-    },
-    {
-      "id": "review-mistakes",
-      "name": "🔁 Review (your mistakes)",
-      "description": "Dynamic pack: your most-missed airports, based on this browser's history.",
-      "filter": {"type":"review_mistakes","limit":200}
-    },
-    {
-      "id": "boss-iata",
-      "name": "🧊 Boss Fight (IATA confusions)",
-      "description": "Dynamic pack: airports involved in your top IATA confusions.",
-      "filter": {"type":"review_confusions","kind":"IATA","limit":200}
-    },
-    {
-      "id": "boss-icao",
-      "name": "🧊 Boss Fight (ICAO confusions)",
-      "description": "Dynamic pack: airports involved in your top ICAO confusions.",
-      "filter": {"type":"review_confusions","kind":"ICAO","limit":200}
-    },
-    {
       "id": "wizz-network",
-      "name": "Wizz Network (ICAO list)",
-      "description": "Matches your airports.txt list (ICAO). Count: 159",
-      "filter": {"type":"icao_list","file":"wizz_network_icao.txt"}
+      "name": "Wizz Network (all airports)",
+      "description": "Only Wizz Air network airports (dataset is network-only).",
+      "filter": {
+        "type": "icao_list",
+        "file": "wizz_network_icao.txt"
+      }
     },
     {
       "id": "wizz-bases",
-      "name": "Wizz Bases (IATA list)",
-      "description": "Matches your base.txt list (IATA). Count: 35",
-      "filter": {"type":"iata_list","file":"wizz_bases_iata.txt"}
-    },
-
-    {
-      "id": "region-cee",
-      "name": "Region: Central & Eastern Europe",
-      "description": "HU, PL, RO, BG, CZ, SK, SI, HR, RS, BA, MK, AL, ME, MD, LT, LV, EE",
-      "filter": {"type":"countries","countries":["HU","PL","RO","BG","CZ","SK","SI","HR","RS","BA","MK","AL","ME","MD","LT","LV","EE"]}
+      "name": "Wizz Bases (subset)",
+      "description": "Wizz base airports (subset of the network).",
+      "filter": {
+        "type": "iata_list",
+        "file": "wizz_bases_iata.txt"
+      }
     },
     {
       "id": "region-balkans",
       "name": "Region: Balkans",
       "description": "AL, BA, BG, HR, GR, ME, MK, RO, RS, SI",
-      "filter": {"type":"countries","countries":["AL","BA","BG","HR","GR","ME","MK","RO","RS","SI"]}
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "AL",
+          "BA",
+          "BG",
+          "HR",
+          "GR",
+          "ME",
+          "MK",
+          "RO",
+          "RS",
+          "SI"
+        ]
+      }
     },
     {
       "id": "region-baltics",
       "name": "Region: Baltics",
       "description": "EE, LV, LT",
-      "filter": {"type":"countries","countries":["EE","LV","LT"]}
-    },
-    {
-      "id": "region-nordics",
-      "name": "Region: Nordics",
-      "description": "DK, NO, SE, FI, IS",
-      "filter": {"type":"countries","countries":["DK","NO","SE","FI","IS"]}
-    },
-    {
-      "id": "region-iberia",
-      "name": "Region: Iberia",
-      "description": "ES, PT",
-      "filter": {"type":"countries","countries":["ES","PT"]}
-    },
-    {
-      "id": "region-uk-ie",
-      "name": "Region: UK & Ireland",
-      "description": "GB, IE",
-      "filter": {"type":"countries","countries":["GB","IE"]}
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "EE",
+          "LV",
+          "LT"
+        ]
+      }
     },
     {
       "id": "region-benelux",
       "name": "Region: Benelux",
       "description": "BE, NL, LU",
-      "filter": {"type":"countries","countries":["BE","NL","LU"]}
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "BE",
+          "NL",
+          "LU"
+        ]
+      }
+    },
+    {
+      "id": "region-cee",
+      "name": "Region: Central & Eastern Europe",
+      "description": "HU, PL, RO, BG, CZ, SK, SI, HR, RS, BA, MK, AL, ME, MD, LT, LV, EE",
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "HU",
+          "PL",
+          "RO",
+          "BG",
+          "CZ",
+          "SK",
+          "SI",
+          "HR",
+          "RS",
+          "BA",
+          "MK",
+          "AL",
+          "ME",
+          "MD",
+          "LT",
+          "LV",
+          "EE"
+        ]
+      }
     },
     {
       "id": "region-dach",
       "name": "Region: DACH",
       "description": "DE, AT, CH",
-      "filter": {"type":"countries","countries":["DE","AT","CH"]}
-    },
-    {
-      "id": "region-italy",
-      "name": "Region: Italy",
-      "description": "IT",
-      "filter": {"type":"countries","countries":["IT"]}
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "DE",
+          "AT",
+          "CH"
+        ]
+      }
     },
     {
       "id": "region-fr",
       "name": "Region: France",
       "description": "FR",
-      "filter": {"type":"countries","countries":["FR"]}
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "FR"
+        ]
+      }
+    },
+    {
+      "id": "region-iberia",
+      "name": "Region: Iberia",
+      "description": "ES, PT",
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "ES",
+          "PT"
+        ]
+      }
+    },
+    {
+      "id": "region-italy",
+      "name": "Region: Italy",
+      "description": "IT",
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "IT"
+        ]
+      }
+    },
+    {
+      "id": "region-nordics",
+      "name": "Region: Nordics",
+      "description": "DK, NO, SE, FI, IS",
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "DK",
+          "NO",
+          "SE",
+          "FI",
+          "IS"
+        ]
+      }
+    },
+    {
+      "id": "region-uk-ie",
+      "name": "Region: UK & Ireland",
+      "description": "GB, IE",
+      "filter": {
+        "type": "countries",
+        "countries": [
+          "GB",
+          "IE"
+        ]
+      }
+    },
+    {
+      "id": "review-mistakes",
+      "name": "🔁 Review (your mistakes)",
+      "description": "Dynamic pack: your most-missed airports, based on this browser's history.",
+      "filter": {
+        "type": "review_mistakes",
+        "limit": 200
+      }
+    },
+    {
+      "id": "boss-iata",
+      "name": "🧊 Boss Fight (IATA confusions)",
+      "description": "Dynamic pack: airports involved in your top IATA confusions.",
+      "filter": {
+        "type": "review_confusions",
+        "kind": "IATA",
+        "limit": 200
+      }
+    },
+    {
+      "id": "boss-icao",
+      "name": "🧊 Boss Fight (ICAO confusions)",
+      "description": "Dynamic pack: airports involved in your top ICAO confusions.",
+      "filter": {
+        "type": "review_confusions",
+        "kind": "ICAO",
+        "limit": 200
+      }
     }
   ]
 }

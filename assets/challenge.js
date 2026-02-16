@@ -47,7 +47,7 @@ export class Challenge{
   start(){
     const pool = this.ctx?.currentPool || [];
     if(pool.length < 20){
-      this.qEl.textContent = 'Pick a bigger pack first (Wizz Network / Global).';
+      this.qEl.textContent = 'Pick a bigger pack first (Wizz Network).';
       this.subEl.textContent = '';
       return;
     }

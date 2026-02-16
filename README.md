@@ -1,6 +1,7 @@
 # icao-iata-trainer
 
 A simple, game-like ICAO/IATA/CITY trainer with:
+**Dataset scope:** This fork is **Wizz network only** (no global airports). Packs (Bases/Regions/Review/Boss/SRS etc.) all operate within the Wizz network dataset.
 - Learn: Enter to check, Enter to go next (results logged in History sidebar)
 - Rapid: Sprint 60s / Sprint 30s / Set of 30, with explicit expected answer type (ICAO CODE / IATA CODE / CITY / NAME)
 - Map: click on a blank-ish map, shows error + line for 2 seconds, then auto-next (no Next button)

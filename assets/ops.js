@@ -42,7 +42,7 @@ export class Ops {
     const pool = this.ctx?.currentPool || [];
     if(pool.length < 15){
       this.qEl.textContent = 'Not enough airports in this pack.';
-      this.subEl.textContent = 'Use a bigger pack (e.g. Wizz Network or Global).';
+      this.subEl.textContent = 'Use a bigger pack (e.g. Wizz Network).';
       return;
     }
     this.running = true;
@@ -59,7 +59,7 @@ export class Ops {
     const pool = (this.ctx?.currentPool || []).filter(a=>Number.isFinite(a.lat) && Number.isFinite(a.lon));
     if(pool.length < 20){
       this.qEl.textContent = 'This pack has too few airports with coordinates.';
-      this.subEl.textContent = 'Try Global or run full dataset build.';
+      this.subEl.textContent = 'Run the data build workflow if needed.';
       return;
     }
 

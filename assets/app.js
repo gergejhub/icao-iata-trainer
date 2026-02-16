@@ -51,7 +51,10 @@ async function boot(){
 
   // Pack select
   const packSel = $('#packSelect');
-  const savedPack = storage.get('packId', db.packs[0].id);
+  const fallbackPack = (db.packs.find(p=>p.id==='wizz-network') || db.packs[0]).id;
+  let savedPack = storage.get('packId', fallbackPack);
+  // migrate old 'global' to network-only
+  if(savedPack==='global') { savedPack='wizz-network'; storage.set('packId', savedPack); }
 
   // Learning-path lock toggle
   const pathLockEl = document.getElementById('pathLock');
@@ -143,13 +146,11 @@ async function boot(){
     if(!el) return;
     const base = progress.get('wizz-bases');
     const net = progress.get('wizz-network');
-    const g = progress.get('global');
-    el.innerHTML = `
-      <div class="smallmuted">Learning path: Bases \u2192 Network \u2192 Regions/Global. (based on recent accuracy)</div>
+        el.innerHTML = `
+      <div class="smallmuted">Learning path: Bases \u2192 Network \u2192 Regions. (based on recent accuracy)</div>
       <div class="list" style="margin-top:8px;">
         <div class="lbrow"><div>Wizz Bases</div><div class="lbscore">${Math.round(base.recentAcc*100)}% / ${base.recentN}</div></div>
         <div class="lbrow"><div>Wizz Network</div><div class="lbscore">${Math.round(net.recentAcc*100)}% / ${net.recentN}</div></div>
-        <div class="lbrow"><div>Global</div><div class="lbscore">${Math.round(g.recentAcc*100)}% / ${g.recentN}</div></div>
       </div>
     `;
   }

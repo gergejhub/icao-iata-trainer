@@ -73,7 +73,7 @@ export class MapQuiz {
   startRun(){
     if(!this.pool.length){
       this.qEl.textContent = 'No airports with coordinates in this pack.';
-      this.subEl.textContent = 'Use Global (sample) or run GitHub Action to build full dataset.';
+      this.subEl.textContent = 'Use Wizz Network (default dataset) or run GitHub Action to build full dataset.';
       return;
     }
     this.running = true;
