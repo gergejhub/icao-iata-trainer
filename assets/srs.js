@@ -38,20 +38,29 @@ export class SRS {
     this.showBtn = document.getElementById('srs-show');
     this.gradeRow = document.getElementById('srs-grades');
     this.dueEl = document.getElementById('srs-due');
+    this.voiceEl = document.getElementById('srs-voice');
 
     this.promptSel?.addEventListener('change', ()=> this.start());
     this.showBtn?.addEventListener('click', ()=> this.reveal());
 
+    // Persist voice preference for SRS (default OFF)
+    if(this.voiceEl){
+      this.voiceEl.checked = storage.get('srsVoice', false) === true;
+      this.voiceEl.addEventListener('change', ()=> storage.set('srsVoice', this.voiceEl.checked === true));
+    }
+
     this.inputEl?.addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){
         e.preventDefault();
+        // Enter: reveal, then advance with implicit "good" grade
         if(!this.awaitReveal) this.reveal();
+        else this.grade('good');
       }
     });
 
-    this.gradeRow?.querySelectorAll('button[data-grade]').forEach(btn=>{
+    this.gradeRow?.querySelectorAll('button[data-srs-grade]').forEach(btn=>{
       btn.addEventListener('click', ()=>{
-        const g = btn.getAttribute('data-grade');
+        const g = btn.getAttribute('data-srs-grade');
         this.grade(g);
       });
     });
@@ -174,10 +183,10 @@ export class SRS {
 
     this.awaitReveal = true;
     this.gradeRow.style.display='flex';
-    this.subEl.textContent = `${this.t('ui.expected', null, 'Expected:')} ${expected}  ${this.t('srs.enter_reveals', null, '(Enter also reveals)')}`;
+    this.subEl.textContent = `${this.t('ui.expected', null, 'Expected:')} ${expected}  ${this.t('srs.enter_reveals', null, '(Enter: reveal / next)')}`;
 
     try{
-      if(this.ctx?.voiceLang) speak(expected, { lang: this.ctx.voiceLang() });
+      if(this.voiceEl?.checked && this.ctx?.voiceLang) speak(expected, { lang: this.ctx.voiceLang() });
     }catch(e){}
   }
 
