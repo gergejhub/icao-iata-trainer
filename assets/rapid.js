@@ -72,8 +72,9 @@ export class Rapid {
     this.inputEl.value = '';
     this.inputEl.focus();
 
-    if(this.mode==='sprint60'){
-      this.tLeft = 60;
+    if(this.mode==='sprint60' || this.mode==='sprint30'){
+      const dur = (this.mode==='sprint30') ? 30 : 60;
+      this.tLeft = dur;
       this.timeEl.textContent = String(this.tLeft);
       clearInterval(this.timer);
       this.timer = setInterval(()=>{
@@ -98,7 +99,9 @@ export class Rapid {
     this.running = false;
     if(this.timer){ clearInterval(this.timer); this.timer=null; }
     const score = this.correct;
-    const modeLabel = this.mode==='sprint60' ? 'RAPID_SPRINT60_CITY' : 'RAPID_SET30_CITY';
+    const modeLabel = (this.mode==='sprint60') ? 'RAPID_SPRINT60_CITY'
+      : (this.mode==='sprint30') ? 'RAPID_SPRINT30_CITY'
+      : 'RAPID_SET30_CITY';
     const lastRun = { mode: modeLabel, score, correct: this.correct, wrong: this.wrong, timestamp: Date.now() };
     this.leaderboard?.setLastRun(lastRun);
     this.subEl.textContent = `Run finished. Score=${score}. Use Scoreboard → Submit last run.`;
@@ -134,7 +137,7 @@ export class Rapid {
         this.finishRun();
         return;
       }
-      if(this.mode==='sprint60' && this.tLeft<=0){
+      if((this.mode==='sprint60' || this.mode==='sprint30') && this.tLeft<=0){
         this.finishRun();
         return;
       }

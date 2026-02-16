@@ -45,7 +45,8 @@ async function boot(){
 
   const setPack = (packId)=>{
     const { pack, pool } = buildPool(db, packId);
-    status.textContent = `${pack.name} • ${pool.length} airports (sample DB)`;
+    const src = db?.meta?.dbSource === 'full' ? 'full DB' : (db?.meta?.dbSource === 'sample' ? 'sample DB' : 'DB');
+    status.textContent = `${pack.name} • ${pool.length} airports (${src})`;
     learn.setPool(pool);
     rapid.setPool(pool);
     mapquiz.setPool(pool);

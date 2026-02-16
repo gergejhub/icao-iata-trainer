@@ -2,7 +2,7 @@
 
 A simple, game-like ICAO/IATA/CITY trainer with:
 - Learn: Enter to check, Enter to go next (results logged in History sidebar)
-- Rapid: Sprint 60s or Set of 30, with explicit expected answer type (ICAO CODE / IATA CODE / CITY / NAME)
+- Rapid: Sprint 60s / Sprint 30s / Set of 30, with explicit expected answer type (ICAO CODE / IATA CODE / CITY / NAME)
 - Map: click on a blank-ish map, shows error + line for 2 seconds, then auto-next (no Next button)
 - History sidebar persists until you start a new game
 - Scoreboard: GitHub Issues based (no backend)
@@ -16,4 +16,4 @@ A simple, game-like ICAO/IATA/CITY trainer with:
 Run GitHub Actions workflow **Build airport data** (manual) or wait for the nightly schedule.
 It generates `data/airports.min.json` from OurAirports.
 
-If `data/airports.min.json` exists, you can replace the loader to use it (future enhancement).
+The app automatically prefers `data/airports.min.json` if present, and falls back to `data/airports.sample.json`.

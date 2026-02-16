@@ -76,8 +76,8 @@ export class MapQuiz {
     this.correct = 0;
     this.wrong = 0;
 
-    if(this.mode==='sprint60'){
-      this.tLeft = 60;
+    if(this.mode==='sprint60' || this.mode==='sprint30'){
+      this.tLeft = (this.mode==='sprint30') ? 30 : 60;
       clearInterval(this.timer);
       this.timer = setInterval(()=>{
         this.tLeft -= 1;
@@ -95,7 +95,9 @@ export class MapQuiz {
     this.running = false;
     if(this.timer){ clearInterval(this.timer); this.timer=null; }
     const score = this.correct;
-    const modeLabel = this.mode==='sprint60' ? 'MAP_SPRINT60' : (this.mode==='set30' ? 'MAP_SET30' : 'MAP_PRACTICE');
+    const modeLabel = this.mode==='sprint60' ? 'MAP_SPRINT60'
+      : (this.mode==='sprint30' ? 'MAP_SPRINT30'
+      : (this.mode==='set30' ? 'MAP_SET30' : 'MAP_PRACTICE'));
     const lastRun = { mode: modeLabel, score, correct: this.correct, wrong: this.wrong, timestamp: Date.now() };
     this.leaderboard?.setLastRun(lastRun);
     this.subEl.textContent = `Run finished. Score=${score}. Use Scoreboard → Submit last run.`;
@@ -133,7 +135,7 @@ export class MapQuiz {
         this.finishRun();
         return;
       }
-      if(this.mode==='sprint60' && this.tLeft<=0){
+      if((this.mode==='sprint60' || this.mode==='sprint30') && this.tLeft<=0){
         this.finishRun();
         return;
       }
