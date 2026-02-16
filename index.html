@@ -305,6 +305,23 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script type="module" src="./assets/app.js"></script>
+  <script type="module">
+  const statusEl = document.getElementById('status');
+  const candidates = ['./', './icao-iata-trainer-main/', './docs/', './public/'];
+  async function tryLoad(){
+    for(const base of candidates){
+      try{
+        window.APP_BASE = base;
+        await import(`${base}assets/app.js`);
+        return;
+      }catch(e){
+        // keep trying
+      }
+    }
+    console.error('Failed to load app.js from any base path candidate.');
+    if(statusEl) statusEl.textContent = 'Hiba: az alkalmazás JavaScript fájljai nem töltődtek be (útvonal / telepítés). DevTools → Network: keresd az assets/app.js 404-et.';
+  }
+  tryLoad();
+</script>
 </body>
 </html>
