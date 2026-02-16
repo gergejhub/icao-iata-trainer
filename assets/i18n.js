@@ -436,17 +436,17 @@ const PACK_NAME = {
     'wizz-bases': 'Wizz Bases',
     'review-mistakes': 'Review (your mistakes)',
     'boss-iata': 'Boss Fight (IATA)',
-    'boss-icao': 'Boss Fight (ICAO)'
-  
-    'daily-top20': 'Daily Top20 (your confusions)',},
+    'boss-icao': 'Boss Fight (ICAO)',
+    'daily-top20': 'Daily Top20 (your confusions)',
+  },
   hu: {
     'wizz-network': 'Wizz Network',
     'wizz-bases': 'Wizz Bázisok',
     'review-mistakes': 'Hibák ismétlése',
     'boss-iata': 'Boss Fight (IATA)',
-    'boss-icao': 'Boss Fight (ICAO)'
-  
-    'daily-top20': 'Napi Top20 (keverések)',}
+    'boss-icao': 'Boss Fight (ICAO)',
+    'daily-top20': 'Napi Top20 (keverések)',
+  }
 };
 
 export const i18n = {
