@@ -1,10 +1,14 @@
-import { kmDistance, pick, shuffleInPlace } from './utils.js';
+import { storage } from './storage.js';
+import { perf } from './perf.js';
+import { progress } from './progress.js';
+import { kmDistance, pick, shuffleInPlace, speak } from './utils.js';
 
 export class MapQuiz {
-  constructor(stats, history, leaderboard){
+  constructor(stats, history, leaderboard, ctx){
     this.stats = stats;
     this.history = history;
     this.leaderboard = leaderboard;
+    this.ctx = ctx;
 
     this.pool = [];
     this.map = null;
@@ -18,6 +22,7 @@ export class MapQuiz {
     this.startBtn = document.getElementById('map-start');
     this.qEl = document.getElementById('map-q');
     this.subEl = document.getElementById('map-sub');
+    this.voiceEl = document.getElementById('map-voice');
 
     this.mode = 'practice';
     this.prompt = 'mixed';
@@ -115,6 +120,8 @@ export class MapQuiz {
     const ok = dist <= 80; // km
 
     this.stats.record(ok);
+    progress.record(this.ctx?.currentPack?.id, ok);
+    if(!ok) perf.recordMistake(storage, a);
     this.asked += 1;
     if(ok) this.correct += 1; else this.wrong += 1;
 
@@ -184,6 +191,9 @@ export class MapQuiz {
     this.current = pick(this.pool);
     this.expectedType = this.pickExpectedType();
     this.qEl.textContent = this.clueLabel(this.current);
+    if(!!this.voiceEl?.checked){
+      try{ speak(this.qEl.textContent, {lang:'en-US', rate:1}); }catch(e){}
+    }
     if(resetSub) this.subEl.textContent = 'Click on the map (no Next button)';
   }
 

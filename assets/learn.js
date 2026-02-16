@@ -1,9 +1,13 @@
-import { eqAnswer, pick, shuffleInPlace } from './utils.js';
+import { storage } from './storage.js';
+import { perf } from './perf.js';
+import { progress } from './progress.js';
+import { eqAnswer, pick, shuffleInPlace, buildChoices, speak } from './utils.js';
 
 export class Learn {
-  constructor(stats, history){
+  constructor(stats, history, ctx){
     this.stats = stats;
     this.history = history;
+    this.ctx = ctx;
     this.pool = [];
     this.mode = 'mixed';
     this.awaitNext = false;
@@ -14,8 +18,12 @@ export class Learn {
     this.qEl = document.getElementById('learn-q');
     this.subEl = document.getElementById('learn-sub');
     this.inputEl = document.getElementById('learn-input');
+    this.mcqEl = document.getElementById('learn-mcq');
+    this.voiceEl = document.getElementById('learn-voice');
+    this.choicesEl = document.getElementById('learn-choices');
 
     this.promptSel?.addEventListener('change', ()=> { this.mode=this.promptSel.value; this.nextQuestion(true); });
+    this.mcqEl?.addEventListener('change', ()=> this.nextQuestion(true));
 
     this.inputEl?.addEventListener('keydown', (e)=>{
       if(e.key==='Enter'){
@@ -45,12 +53,29 @@ export class Learn {
       const ok = eqAnswer(user, expected);
 
       this.stats.record(ok);
+      progress.record(this.ctx?.currentPack?.id, ok);
+
+      if(!ok){
+        perf.recordMistake(storage, this.current);
+        const kind = (this.expectedType==='iata') ? 'IATA' : (this.expectedType==='icao' ? 'ICAO' : null);
+        if(kind) perf.recordConfusion(storage, kind, expected, user);
+      }
       const title = `${this.badge()} | ${this.clueLabel(this.current)}`;
       const detail = ok ? `OK: ${expected}` : `Your: ${user||'—'} • Correct: ${expected}`;
       this.history.add({ok, title, detail});
 
       this.subEl.textContent = ok ? '✅ Correct — press Enter for next' : '❌ Wrong — press Enter for next';
       this.awaitNext = true;
+
+      // MCQ mode: auto-advance
+      if(this.mcqEl?.checked){
+        setTimeout(()=>{
+          if(!this.awaitNext) return;
+          this.awaitNext=false;
+          this.inputEl.value='';
+          this.nextQuestion(true);
+        }, 650);
+      }
     }else{
       this.awaitNext = false;
       this.inputEl.value = '';
@@ -78,6 +103,44 @@ export class Learn {
     const clue = this.clueLabel(this.current);
     this.qEl.textContent = `${this.badge()} ← ${clue}`;
     if(resetSub) this.subEl.textContent = 'Type answer and press Enter';
+
+    const voice = !!this.voiceEl?.checked;
+    if(voice){
+      try{ speak(this.qEl.textContent, {lang:'en-US', rate:1}); }catch(e){}
+    }
+
+    const mcq = !!this.mcqEl?.checked;
+    if(mcq){
+      this.inputEl.style.display='none';
+      this.choicesEl.style.display='grid';
+      const expected = this.getExpectedAnswer(this.current, this.expectedType);
+      const choices = buildChoices({
+        pool: this.pool,
+        correct: expected,
+        getter: (a)=> this.getExpectedAnswer(a, this.expectedType),
+        n: 4
+      });
+      this.renderChoices(choices);
+    }else{
+      this.inputEl.style.display='';
+      this.choicesEl.style.display='none';
+      this.choicesEl.innerHTML='';
+    }
+  }
+
+  renderChoices(choices){
+    if(!this.choicesEl) return;
+    this.choicesEl.innerHTML='';
+    for(const c of choices){
+      const b=document.createElement('button');
+      b.className='choice';
+      b.textContent=c;
+      b.addEventListener('click', ()=>{
+        this.inputEl.value=c;
+        this.onEnter();
+      });
+      this.choicesEl.appendChild(b);
+    }
   }
 
   pickExpectedType(){

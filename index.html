@@ -25,6 +25,11 @@
         <button id="btn-rapid">Rapid</button>
         <button id="btn-map">Map</button>
         <button class="ghost" id="btn-drill">Drill</button>
+        <button class="ghost" id="btn-srs">SRS</button>
+        <button class="ghost" id="btn-ops">Ops</button>
+        <button class="ghost" id="btn-challenge">Challenge</button>
+        <button class="ghost" id="btn-brief">Brief</button>
+        <button class="ghost" id="btn-heatmap">Heatmap</button>
         <button class="ghost" id="btn-reset">Reset</button>
       </div>
     </div>
@@ -50,6 +55,10 @@
           <div class="card-h"><h2 style="margin:0;">Home</h2><span class="badge">Pick a mode</span></div>
           <div class="card-b">
             <div class="smallmuted">Tip: open Scoreboard on the right. Nickname is stored in your browser.</div>
+            <div class="row" style="margin-top:10px; flex-wrap:wrap;">
+              <label class="toggle"><input type="checkbox" id="pathLock"/> Learning path lock (Bases → Network → Regions/Global)</label>
+            </div>
+            <div id="pathStatus" style="margin-top:10px;"></div>
           </div>
         </div>
 
@@ -68,12 +77,15 @@
                 <option value="city">CITY</option>
                 <option value="name">AIRPORT NAME</option>
               </select>
+              <label class="toggle"><input type="checkbox" id="learn-mcq"/> MCQ</label>
+              <label class="toggle"><input type="checkbox" id="learn-voice"/> Voice</label>
             </div>
             <div class="big" id="learn-q" style="margin-top:12px;">—</div>
             <div class="smallmuted" id="learn-sub" style="margin-top:6px;">—</div>
             <div class="row" style="margin-top:10px;">
               <input class="answer" id="learn-input" placeholder="Type answer… then press Enter" autocomplete="off" />
             </div>
+            <div id="learn-choices" class="choices" style="display:none; margin-top:10px;"></div>
           </div>
         </div>
 
@@ -97,6 +109,8 @@
                 <option value="name">AIRPORT NAME</option>
               </select>
               <button class="primary" id="rapid-start">Start</button>
+              <label class="toggle"><input type="checkbox" id="rapid-mcq"/> MCQ</label>
+              <label class="toggle"><input type="checkbox" id="rapid-voice"/> Voice</label>
               <span class="smallmuted">Time: <b id="rapid-time">—</b></span>
               <span class="smallmuted">✅ <b id="rapid-ok">0</b></span>
               <span class="smallmuted">❌ <b id="rapid-bad">0</b></span>
@@ -108,6 +122,7 @@
             <div class="row" style="margin-top:10px;">
               <input class="answer" id="rapid-input" placeholder="Type answer… then press Enter" autocomplete="off" />
             </div>
+            <div id="rapid-choices" class="choices" style="display:none; margin-top:10px;"></div>
           </div>
         </div>
 
@@ -132,6 +147,7 @@
                 <option value="name">AIRPORT NAME</option>
               </select>
               <button class="primary" id="map-start">Start</button>
+              <label class="toggle"><input type="checkbox" id="map-voice"/> Voice</label>
             </div>
 
             <div class="big" id="map-q" style="margin-top:12px;">—</div>
@@ -143,6 +159,106 @@
         <div class="card" data-view="drill" style="display:none; margin-top:14px;">
           <div class="card-h"><h2 style="margin:0;">Drill</h2><span class="badge">optional</span></div>
           <div class="card-b" id="drill-root">—</div>
+        </div>
+
+        <div class="card" data-view="srs" style="display:none; margin-top:14px;">
+          <div class="card-h"><h2 style="margin:0;">SRS</h2><span class="badge" id="srs-due">—</span></div>
+          <div class="card-b">
+            <div class="row" style="flex-wrap:wrap;">
+              <label class="toggle"><input type="checkbox" id="srs-mcq"/> MCQ</label>
+              <label class="toggle"><input type="checkbox" id="srs-voice"/> Voice</label>
+              <button class="ghost" id="srs-show">Show</button>
+              <span class="smallmuted">(Enter also reveals)</span>
+            </div>
+            <div class="big" id="srs-q" style="margin-top:12px;">—</div>
+            <div class="smallmuted" id="srs-sub" style="margin-top:6px;">—</div>
+            <div class="row" style="margin-top:10px;">
+              <input class="answer" id="srs-input" placeholder="Type answer…" autocomplete="off" />
+            </div>
+            <div id="srs-choices" class="choices" style="display:none; margin-top:10px;"></div>
+
+            <div id="srs-reveal" style="display:none; margin-top:12px;">
+              <div id="srs-answer"></div>
+            </div>
+
+            <div id="srs-grades" class="grades" style="display:none; margin-top:12px;">
+              <button class="choice" data-srs-grade="again">Again</button>
+              <button class="choice" data-srs-grade="hard">Hard</button>
+              <button class="choice" data-srs-grade="good">Good</button>
+              <button class="choice" data-srs-grade="easy">Easy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" data-view="brief" style="display:none; margin-top:14px;">
+          <div class="card-h"><h2 style="margin:0;">Brief generator</h2><span class="badge">20–60s</span></div>
+          <div class="card-b">
+            <div class="row" style="flex-wrap:wrap;">
+              <select id="brief-lang">
+                <option value="en">English</option>
+                <option value="hu">Magyar</option>
+              </select>
+              <select id="brief-len">
+                <option value="20">~20s</option>
+                <option value="40" selected>~40s</option>
+                <option value="60">~60s</option>
+              </select>
+              <button class="primary" id="brief-gen">Generate</button>
+              <button class="ghost" id="brief-copy">Copy</button>
+            </div>
+            <textarea id="brief-out" style="width:100%; min-height:140px; margin-top:10px;"></textarea>
+          </div>
+        </div>
+
+        <div class="card" data-view="heatmap" style="display:none; margin-top:14px;">
+          <div class="card-h"><h2 style="margin:0;">Error heatmap</h2><span class="badge">Leaflet</span></div>
+          <div class="card-b">
+            <div class="row" style="flex-wrap:wrap;">
+              <span class="smallmuted">Min mistakes:</span>
+              <input type="range" id="hm-min" min="1" max="10" value="1" />
+              <label class="toggle"><input type="checkbox" id="hm-onlypack"/> Only current pack</label>
+              <button class="ghost" id="hm-refresh">Refresh</button>
+              <button class="ghost" id="hm-export">Export mistakes CSV</button>
+              <button class="ghost" id="hm-export2">Export confusions CSV</button>
+            </div>
+            <div id="heatmap" style="margin-top:12px;"></div>
+          </div>
+        </div>
+
+        <div class="card" data-view="ops" style="display:none; margin-top:14px;">
+          <div class="card-h"><h2 style="margin:0;">Ops drill</h2><span class="badge">Routes & alternates</span></div>
+          <div class="card-b">
+            <div class="row" style="flex-wrap:wrap;">
+              <select id="ops-mode">
+                <option value="alternates" selected>Alternates</option>
+              </select>
+              <button class="primary" id="ops-start">Start</button>
+              <span class="smallmuted">Score: <b id="ops-score">0</b></span>
+            </div>
+            <div class="big" id="ops-q" style="margin-top:12px;">—</div>
+            <div class="smallmuted" id="ops-sub" style="margin-top:6px;">—</div>
+            <div id="ops-options" class="choices" style="margin-top:10px;"></div>
+          </div>
+        </div>
+
+        <div class="card" data-view="challenge" style="display:none; margin-top:14px;">
+          <div class="card-h"><h2 style="margin:0;">Shift Challenge</h2><span class="badge">mixed</span></div>
+          <div class="card-b">
+            <div class="row" style="flex-wrap:wrap;">
+              <select id="ch-dur">
+                <option value="5" selected>5 min</option>
+                <option value="10">10 min</option>
+                <option value="15">15 min</option>
+              </select>
+              <label class="toggle"><input type="checkbox" id="ch-voice"/> Voice</label>
+              <button class="primary" id="ch-start">Start</button>
+              <span class="smallmuted">Time: <b id="ch-time">—</b></span>
+              <span class="smallmuted">Score: <b id="ch-score">0</b></span>
+            </div>
+            <div class="big" id="ch-q" style="margin-top:12px;">—</div>
+            <div class="smallmuted" id="ch-sub" style="margin-top:6px;">—</div>
+            <div id="ch-options" class="choices" style="margin-top:10px;"></div>
+          </div>
         </div>
       </div>
 

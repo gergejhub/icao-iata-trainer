@@ -1,10 +1,14 @@
-import { eqAnswer, pick, shuffleInPlace } from './utils.js';
+import { storage } from './storage.js';
+import { perf } from './perf.js';
+import { progress } from './progress.js';
+import { eqAnswer, pick, shuffleInPlace, buildChoices, speak } from './utils.js';
 
 export class Rapid {
-  constructor(stats, history, leaderboard){
+  constructor(stats, history, leaderboard, ctx){
     this.stats = stats;
     this.history = history;
     this.leaderboard = leaderboard;
+    this.ctx = ctx;
 
     this.pool = [];
     this.mode = 'sprint60';
@@ -19,6 +23,9 @@ export class Rapid {
     this.qEl = document.getElementById('rapid-q');
     this.subEl = document.getElementById('rapid-sub');
     this.inputEl = document.getElementById('rapid-input');
+    this.mcqEl = document.getElementById('rapid-mcq');
+    this.voiceEl = document.getElementById('rapid-voice');
+    this.choicesEl = document.getElementById('rapid-choices');
     this.timeEl = document.getElementById('rapid-time');
     this.okEl = document.getElementById('rapid-ok');
     this.badEl = document.getElementById('rapid-bad');
@@ -33,6 +40,8 @@ export class Rapid {
         this.onEnter();
       }
     });
+
+    this.mcqEl?.addEventListener('change', ()=> this.start());
 
     this.timer = null;
     this.running = false;
@@ -53,6 +62,10 @@ export class Rapid {
     this.qEl.textContent = 'Pick mode + prompt, press Start';
     this.subEl.textContent = '';
     this.inputEl.value = '';
+    this.choicesEl.innerHTML='';
+    const mcq = !!this.mcqEl?.checked;
+    this.inputEl.style.display = mcq ? 'none' : '';
+    this.choicesEl.style.display = mcq ? 'grid' : 'none';
     this.timeEl.textContent = '—';
   }
 
@@ -70,7 +83,7 @@ export class Rapid {
     this.okEl.textContent = '0';
     this.badEl.textContent = '0';
     this.inputEl.value = '';
-    this.inputEl.focus();
+    if(!this.mcqEl?.checked) this.inputEl.focus();
 
     if(this.mode==='sprint60' || this.mode==='sprint30'){
       const dur = (this.mode==='sprint30') ? 30 : 60;
@@ -111,6 +124,38 @@ export class Rapid {
     if(!this.running) return;
     if(!this.current) return;
 
+    const mcq = !!this.mcqEl?.checked;
+    if(mcq){
+      // In MCQ mode: one click = one full cycle (no “press Enter again”).
+      const user = this.inputEl.value;
+      const expected = this.getExpectedAnswer(this.current, this.expectedType);
+      const ok = eqAnswer(user, expected);
+
+      this.stats.record(ok);
+      progress.record(this.ctx?.currentPack?.id, ok);
+      this.asked += 1;
+      if(ok) this.correct += 1; else this.wrong += 1;
+      this.okEl.textContent = String(this.correct);
+      this.badEl.textContent = String(this.wrong);
+
+      if(!ok){
+        perf.recordMistake(storage, this.current);
+        const kind = (this.expectedType==='iata') ? 'IATA' : (this.expectedType==='icao' ? 'ICAO' : null);
+        if(kind) perf.recordConfusion(storage, kind, expected, user);
+      }
+
+      const title = `MCQ | ${this.badge()} | ${this.clueLabel(this.current)}`;
+      const detail = ok ? `OK: ${expected}` : `Your: ${user||'—'} • Correct: ${expected}`;
+      this.history.add({ok, title, detail});
+
+      this.subEl.textContent = ok ? '✅' : '❌';
+      this.inputEl.value = '';
+      if(this.mode==='set30' && this.asked>=30){ this.finishRun(); return; }
+      if((this.mode==='sprint60' || this.mode==='sprint30') && this.tLeft<=0){ this.finishRun(); return; }
+      setTimeout(()=> this.nextQuestion(true), 250);
+      return;
+    }
+
     if(!this.awaitNext){
       // Evaluate
       const user = this.inputEl.value;
@@ -118,6 +163,12 @@ export class Rapid {
       const ok = eqAnswer(user, expected);
 
       this.stats.record(ok);
+      progress.record(this.ctx?.currentPack?.id, ok);
+      if(!ok){
+        perf.recordMistake(storage, this.current);
+        const kind = (this.expectedType==='iata') ? 'IATA' : (this.expectedType==='icao' ? 'ICAO' : null);
+        if(kind) perf.recordConfusion(storage, kind, expected, user);
+      }
       this.asked += 1;
       if(ok) this.correct += 1; else this.wrong += 1;
       this.okEl.textContent = String(this.correct);
@@ -178,7 +229,43 @@ export class Rapid {
     this.current = pick(this.pool);
     this.expectedType = this.pickExpectedType();
     this.qEl.textContent = `${this.badge()} ← ${this.clueLabel(this.current)}`;
-    if(resetSub) this.subEl.textContent = 'Type answer and press Enter';
+    if(resetSub) this.subEl.textContent = this.mcqEl?.checked ? 'Pick answer (MCQ)' : 'Type answer and press Enter';
+
+    const voice = !!this.voiceEl?.checked;
+    if(voice){
+      try{ speak(this.qEl.textContent, {lang:'en-US', rate:1}); }catch(e){}
+    }
+
+    const mcq = !!this.mcqEl?.checked;
+    this.inputEl.style.display = mcq ? 'none' : '';
+    this.choicesEl.style.display = mcq ? 'grid' : 'none';
+    if(mcq){
+      const expected = this.getExpectedAnswer(this.current, this.expectedType);
+      const choices = buildChoices({
+        pool: this.pool,
+        correct: expected,
+        getter: (a)=> this.getExpectedAnswer(a, this.expectedType),
+        n: 4
+      });
+      this.renderChoices(choices);
+    }else{
+      this.choicesEl.innerHTML='';
+    }
+  }
+
+  renderChoices(choices){
+    if(!this.choicesEl) return;
+    this.choicesEl.innerHTML='';
+    for(const c of choices){
+      const b=document.createElement('button');
+      b.className='choice';
+      b.textContent=c;
+      b.addEventListener('click', ()=>{
+        this.inputEl.value=c;
+        this.onEnter();
+      });
+      this.choicesEl.appendChild(b);
+    }
   }
 
   getExpectedAnswer(a, t){
