@@ -18,6 +18,26 @@ export function eqAnswer(user, expected){
   return a.length>0 && a===b;
 }
 
+// Special matcher for AIRPORT NAME questions: allow typing just the city name.
+// - case-insensitive
+// - accent-insensitive
+// - accepts:
+//   1) exact airport name
+//   2) exact city name
+//   3) (optional) partial airport name match (>=4 chars)
+export function eqAirportNameOrCity(userRaw, airport){
+  const u = normalize(userRaw);
+  if(!u) return false;
+  const name = normalize(airport?.name||'');
+  const city = normalize(airport?.city||'');
+  if(name && u===name) return true;
+  if(city && u===city) return true;
+  // Allow partial match for convenience when users type a distinctive fragment.
+  // Guard with length to avoid trivial 1-2 letter matches.
+  if(name && u.length>=4 && name.includes(u)) return true;
+  return false;
+}
+
 export function nameMatch(userRaw, nameRaw){
   const u = normalize(userRaw);
   const n = normalize(nameRaw);
@@ -33,6 +53,54 @@ export function prettyAirport(a){
   const name = a.name ? `${a.name}` : '';
   const ctry = a.country ? `(${a.country})` : '';
   return [code, city, name, ctry].filter(Boolean).join(' • ');
+}
+
+// Simple modal popup (no dependencies). Useful for end-of-run summaries.
+export function showPopup({ title='Info', message='', okText='OK' } = {}){
+  try{
+    // Remove any previous popup
+    const prev = document.getElementById('app-popup-backdrop');
+    if(prev) prev.remove();
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'app-popup-backdrop';
+    backdrop.className = 'modal-backdrop';
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+
+    const h = document.createElement('div');
+    h.className = 'modal-h';
+    h.textContent = title;
+
+    const b = document.createElement('div');
+    b.className = 'modal-b';
+    // Preserve line breaks
+    const pre = document.createElement('pre');
+    pre.className = 'modal-pre';
+    pre.textContent = message;
+    b.appendChild(pre);
+
+    const f = document.createElement('div');
+    f.className = 'modal-f';
+    const btn = document.createElement('button');
+    btn.className = 'primary';
+    btn.textContent = okText;
+    btn.addEventListener('click', ()=> backdrop.remove());
+    f.appendChild(btn);
+
+    modal.appendChild(h);
+    modal.appendChild(b);
+    modal.appendChild(f);
+    backdrop.appendChild(modal);
+    backdrop.addEventListener('click', (e)=>{ if(e.target===backdrop) backdrop.remove(); });
+    document.body.appendChild(backdrop);
+    return ()=> backdrop.remove();
+  }catch(e){
+    // Fallback
+    alert(`${title}\n\n${message}`);
+    return ()=>{};
+  }
 }
 
 export function unique(arr){

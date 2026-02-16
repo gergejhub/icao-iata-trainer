@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { pick, shuffleInPlace, buildChoices, speak } from './utils.js';
+import { pick, shuffleInPlace, buildChoices, speak, showPopup } from './utils.js';
 
 function now(){ return Date.now(); }
 
@@ -91,6 +91,14 @@ export class Challenge {
       wrong: this.wrong,
       timestamp: Date.now()
     });
+
+    const title = this.t('popup.run_end.title', null, 'Vége a játéknak');
+    const msg = this.t('popup.challenge_end.msg', {
+      correct: this.correct,
+      wrong: this.wrong,
+      score: this.score
+    }, `Mód: CHALLENGE\nHelyes: ${this.correct}\nHibás: ${this.wrong}\nPont: ${this.score}`);
+    showPopup({ title, message: msg, okText: this.t('popup.ok', null, 'OK') });
   }
 
   tick(){
@@ -142,7 +150,7 @@ export class Challenge {
 
     const clue = this.clueLabel(ap, this.expectedType);
     const badge = this.badge(this.expectedType);
-    this.qEl.textContent = `${badge} ← ${clue}`;
+    this.qEl.textContent = `${clue} → ${badge}`;
 
     const hint = (this.ctx?.proMode && this.baseCtx)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)

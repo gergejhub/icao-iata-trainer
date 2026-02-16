@@ -124,7 +124,7 @@ export class MapQuiz {
     this.expectedType = this.pickExpectedType();
     this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
 
-    const q = `${this.badge()} ← ${this.clueLabel(this.current)}`;
+    const q = `${this.clueLabel(this.current)} → ${this.badge()}`;
     this.qEl.textContent = q;
 
     const baseTxt = (this.baseCtx && this.ctx?.proMode)

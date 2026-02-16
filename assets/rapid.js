@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, pick, shuffleInPlace, buildChoices, speak } from './utils.js';
+import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak, showPopup } from './utils.js';
 
 export class Rapid {
   constructor(stats, history, leaderboard, ctx){
@@ -128,6 +128,22 @@ export class Rapid {
       wrong: this.wrong,
       timestamp: Date.now()
     });
+
+    // Popup end-of-run summary
+    const mode = (this.modeSel?.value||'rapid').toUpperCase();
+    const title = this.t('popup.run_end.title', null, 'Vége a játéknak');
+    const msg = this.t('popup.run_end.msg', {
+      mode,
+      correct: this.correct,
+      wrong: this.wrong,
+      asked: this.asked,
+      score
+    }, `Mód: ${mode}\nKérdések: ${this.asked}\nHelyes: ${this.correct}\nHibás: ${this.wrong}\nPont: ${score}`);
+    showPopup({
+      title,
+      message: msg,
+      okText: this.t('popup.ok', null, 'OK')
+    });
   }
 
   tick(){
@@ -185,7 +201,7 @@ export class Rapid {
     this.expectedType = this.pickExpectedType();
 
     const clue = this.clueLabel(this.current);
-    this.qEl.textContent = `${this.badge()} ← ${clue}`;
+    this.qEl.textContent = `${clue} → ${this.badge()}`;
 
     if(resetSub){
       const baseHint = this.baseCtx
@@ -244,7 +260,9 @@ export class Rapid {
 
     const user = this.inputEl.value;
     const expected = this.getExpectedAnswer(this.current, this.expectedType);
-    const ok = eqAnswer(user, expected);
+    const ok = (this.expectedType==='name')
+      ? eqAirportNameOrCity(user, this.current)
+      : eqAnswer(user, expected);
 
     this.stats.record(ok);
     progress.record(this.ctx?.currentPack?.id, ok);

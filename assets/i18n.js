@@ -61,6 +61,12 @@ const DICT = {
     'ui.mcq': 'MCQ',
     'ui.nickname_ph': 'Nickname (for submit)',
 
+    // Popups
+    'popup.ok': 'OK',
+    'popup.run_end.title': 'Game over',
+    'popup.run_end.msg': 'Mode: {mode}\nQuestions: {asked}\nCorrect: {correct}\nWrong: {wrong}\nScore: {score}',
+    'popup.challenge_end.msg': 'Mode: CHALLENGE\nCorrect: {correct}\nWrong: {wrong}\nScore: {score}',
+
     // Labels used in questions
     'label.icao_code': 'ICAO CODE',
     'label.iata_code': 'IATA CODE',
@@ -270,6 +276,12 @@ const DICT = {
     'ui.voice': 'Hang',
     'ui.mcq': 'Feleletválasztós',
     'ui.nickname_ph': 'Becenév (beküldéshez)',
+
+    // Popups
+    'popup.ok': 'Rendben',
+    'popup.run_end.title': 'Vége a játéknak',
+    'popup.run_end.msg': 'Mód: {mode}\nKérdések: {asked}\nHelyes: {correct}\nHibás: {wrong}\nPont: {score}',
+    'popup.challenge_end.msg': 'Mód: CHALLENGE\nHelyes: {correct}\nHibás: {wrong}\nPont: {score}',
 
     // Labels used in questions
     'label.icao_code': 'ICAO KÓD',

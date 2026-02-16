@@ -119,3 +119,43 @@ textarea{ background: rgba(0,0,0,.18); border:1px solid var(--border); color:var
   border-color: rgba(255,255,255,.35);
   background: rgba(255,255,255,.14);
 }
+
+/* Modal popup */
+.modal-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9999;
+}
+.modal{
+  width: min(560px, 100%);
+  background: rgba(17,22,42,.96);
+  border:1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 18px 60px rgba(0,0,0,.45);
+  overflow: hidden;
+}
+.modal-h{
+  padding: 12px 14px;
+  border-bottom:1px solid var(--border);
+  font-weight: 900;
+}
+.modal-b{ padding: 14px; }
+.modal-pre{
+  margin:0;
+  white-space: pre-wrap;
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+  line-height: 1.35;
+}
+.modal-f{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding: 12px 14px;
+  border-top:1px solid var(--border);
+}

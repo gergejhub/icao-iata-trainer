@@ -134,7 +134,7 @@ export class SRS {
     const expType = this.pickExpectedType(this.current);
     this.current._expectedType = expType;
 
-    const q = `${this.labelFor(expType)} ← ${this.clueFor(this.current, expType)}`;
+    const q = `${this.clueFor(this.current, expType)} → ${this.labelFor(expType)}`;
     this.qEl.textContent = q;
 
     const baseHint = (this.ctx?.proMode && this.baseCtx)

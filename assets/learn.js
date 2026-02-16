@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, pick, shuffleInPlace, buildChoices, speak } from './utils.js';
+import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak } from './utils.js';
 
 export class Learn {
   constructor(stats, history, ctx){
@@ -60,7 +60,9 @@ export class Learn {
     if(!this.awaitNext){
       const user = this.inputEl?.value || '';
       const expected = this.getExpectedAnswer(this.current, this.expectedType);
-      const ok = eqAnswer(user, expected);
+      const ok = (this.expectedType==='name')
+        ? eqAirportNameOrCity(user, this.current)
+        : eqAnswer(user, expected);
 
       this.stats.record(ok);
       progress.record(this.ctx?.currentPack?.id, ok);
@@ -122,7 +124,7 @@ export class Learn {
     this.expectedType = this.pickExpectedType();
 
     const clue = this.clueLabel(this.current);
-    this.qEl.textContent = `${this.badge()} ← ${clue}`;
+    this.qEl.textContent = `${clue} → ${this.badge()}`;
 
     if(resetSub){
       const baseLine = (this.ctx?.proMode && this.baseCtx)
