@@ -307,20 +307,71 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script type="module">
   const statusEl = document.getElementById('status');
+
   const candidates = ['./', './icao-iata-trainer-main/', './docs/', './public/'];
-  async function tryLoad(){
-    for(const base of candidates){
+
+  const REQUIRED = [
+    'assets/app.js',
+    'assets/storage.js',
+    'assets/data.js',
+    'assets/i18n.js',
+    'assets/utils.js',
+    'data/airports.min.json',
+    'data/packs.json',
+    'data/wizz_network_icao.txt',
+    'data/wizz_bases_iata.txt'
+  ];
+
+  function setStatus(msg){
+    if(statusEl) statusEl.textContent = msg;
+  }
+
+  async function checkBase(base){
+    for(const p of REQUIRED){
       try{
-        window.APP_BASE = base;
-        await import(`${base}assets/app.js`);
-        return;
+        const r = await fetch(`${base}${p}`, { cache: 'no-store' });
+        if(!r.ok) return `${p} (${r.status})`;
       }catch(e){
-        // keep trying
+        return `${p} (fetch error)`;
       }
     }
-    console.error('Failed to load app.js from any base path candidate.');
-    if(statusEl) statusEl.textContent = 'Hiba: az alkalmazás JavaScript fájljai nem töltődtek be (útvonal / telepítés). DevTools → Network: keresd az assets/app.js 404-et.';
+    return null;
   }
+
+  async function tryLoad(){
+    let lastErr = null;
+
+    for(const base of candidates){
+      window.APP_BASE = base;
+
+      const missing = await checkBase(base);
+      if(missing){
+        lastErr = new Error(`Preflight failed at base "${base}": missing ${missing}`);
+        continue;
+      }
+
+      try{
+        await import(`${base}assets/app.js`);
+        if(window.__APP_IMPORTED__){
+          return;
+        }
+        lastErr = new Error(`Imported app.js from "${base}" but it did not initialize.`);
+      }catch(e){
+        lastErr = e;
+        console.error('Import failed from base', base, e);
+      }
+    }
+
+    const hint = [
+      'Hiba: az alkalmazás JS moduljai nem futnak.',
+      lastErr ? ('Részlet: ' + (lastErr.message || String(lastErr))) : '',
+      'DevTools → Console: a hiba általában megmondja melyik fájl hiányzik vagy MIME/CSP miatt blokkolt.',
+      'Fontos: a helyes URL GitHub Pages-en: https://felhasznalo.github.io/repo/ (nem github.com/blob és nem raw).',
+      'DevTools → Network: szűrj rá: "assets/" és nézd meg van‑e piros (404/blocked) a storage.js, data.js, i18n.js stb. fájlokra.'
+    ].filter(Boolean).join(' ');
+    setStatus(hint);
+  }
+
   tryLoad();
 </script>
 </body>

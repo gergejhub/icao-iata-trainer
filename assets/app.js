@@ -1,3 +1,4 @@
+window.__APP_IMPORTED__ = true;
 import { storage } from './storage.js';
 import { loadAllData, buildPool } from './data.js';
 import { Stats } from './stats.js';
