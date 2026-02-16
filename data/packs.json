@@ -193,6 +193,15 @@
         "kind": "ICAO",
         "limit": 200
       }
+    },
+    {
+      "id": "daily-top20",
+      "name": "🗓️ Daily Top20",
+      "description": "Dynamic pack: your top confusions for today (mix IATA+ICAO).",
+      "filter": {
+        "type": "daily_confusions",
+        "limit": 20
+      }
     }
   ]
 }

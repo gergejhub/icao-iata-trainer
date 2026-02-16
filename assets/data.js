@@ -159,6 +159,40 @@ function applyFilter(db, airports, f){
     return picked.length ? picked : airports;
   }
 
+
+
+  if(f.type==='daily_confusions'){
+    const limit = Math.max(10, Math.min(80, Number(f.limit||20)));
+    const conf = perf.getConfusions(storage);
+    const entries = Object.entries(conf).map(([k,v])=>({k, count:Number(v||0)}));
+    entries.sort((a,b)=>b.count-a.count);
+
+    // Keep only valid IATA/ICAO confusion keys
+    const pairs=[];
+    for(const it of entries){
+      const m = it.k.match(/^(IATA|ICAO):([^>]+)>(.+)$/);
+      if(!m) continue;
+      pairs.push({kind:m[1], expected:m[2].toUpperCase(), given:m[3].toUpperCase(), count:it.count});
+      if(pairs.length>=limit) break;
+    }
+
+    // Build airport list from expected+given sides, unique
+    const set = new Set();
+    const picked=[];
+    for(const pr of pairs){
+      const kind = pr.kind;
+      const a1 = (kind==='IATA') ? (db.indexes?.byIATA?.[pr.expected]||null) : (db.indexes?.byICAO?.[pr.expected]||null);
+      const a2 = (kind==='IATA') ? (db.indexes?.byIATA?.[pr.given]||null) : (db.indexes?.byICAO?.[pr.given]||null);
+      for(const a of [a1,a2]){
+        if(!a) continue;
+        const key=(a.icao||'')+'|'+(a.iata||'');
+        if(set.has(key)) continue;
+        set.add(key);
+        picked.push(a);
+      }
+    }
+    return picked.length ? picked : airports;
+  }
   if(f.type==='tag'){
     // Dataset currently has no tags; keep safe fallback (all).
     return airports;

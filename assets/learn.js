@@ -13,6 +13,7 @@ export class Learn {
     this.awaitNext = false;
     this.current = null;
     this.expectedType = null;
+    this.baseCtx = null;
 
     this.promptSel = document.getElementById('learn-prompt');
     this.qEl = document.getElementById('learn-q');
@@ -33,6 +34,14 @@ export class Learn {
     });
   }
 
+  t(key, vars=null, fallback=null){
+    return this.ctx?.t ? this.ctx.t(key, vars, fallback) : (fallback ?? key);
+  }
+
+  voiceLang(){
+    return this.ctx?.voiceLang ? this.ctx.voiceLang() : 'en-US';
+  }
+
   setPool(pool){
     this.pool = Array.isArray(pool)? pool.slice(): [];
     shuffleInPlace(this.pool);
@@ -40,15 +49,16 @@ export class Learn {
 
   start(){
     this.awaitNext = false;
-    this.inputEl.value = '';
+    if(this.inputEl) this.inputEl.value = '';
     this.nextQuestion(true);
-    this.inputEl.focus();
+    this.inputEl?.focus?.();
   }
 
   onEnter(){
     if(!this.current) return;
+
     if(!this.awaitNext){
-      const user = this.inputEl.value;
+      const user = this.inputEl?.value || '';
       const expected = this.getExpectedAnswer(this.current, this.expectedType);
       const ok = eqAnswer(user, expected);
 
@@ -60,59 +70,76 @@ export class Learn {
         const kind = (this.expectedType==='iata') ? 'IATA' : (this.expectedType==='icao' ? 'ICAO' : null);
         if(kind) perf.recordConfusion(storage, kind, expected, user);
       }
-      const title = `${this.badge()} | ${this.clueLabel(this.current)}`;
-      const detail = ok ? `OK: ${expected}` : `Your: ${user||'—'} • Correct: ${expected}`;
-      this.history.add({ok, title, detail});
 
-      this.subEl.textContent = ok ? '✅ Correct — press Enter for next' : '❌ Wrong — press Enter for next';
+      const title = `${this.badge()} | ${this.clueLabel(this.current)}`;
+      const detail = ok
+        ? this.t('detail.ok', { expected }, `OK: ${expected}`)
+        : this.t('detail.wrong', { user: user||'—', expected }, `Your: ${user||'—'} • Correct: ${expected}`);
+      this.history.add({ ok, title, detail });
+
+      this.subEl.textContent = ok
+        ? this.t('learn.sub.correct_next', null, '✅ Correct — press Enter for next')
+        : this.t('learn.sub.wrong_next', null, '❌ Wrong — press Enter for next');
       this.awaitNext = true;
 
-      // MCQ mode: auto-advance
+      // MCQ: auto-advance
       if(this.mcqEl?.checked){
         setTimeout(()=>{
           if(!this.awaitNext) return;
           this.awaitNext=false;
-          this.inputEl.value='';
+          if(this.inputEl) this.inputEl.value='';
           this.nextQuestion(true);
         }, 650);
       }
-    }else{
-      this.awaitNext = false;
-      this.inputEl.value = '';
-      this.nextQuestion();
+
+      return;
     }
+
+    // next
+    this.awaitNext = false;
+    if(this.inputEl) this.inputEl.value = '';
+    this.nextQuestion();
   }
 
   badge(){
     const t = this.expectedType;
-    if(t==='icao') return 'ICAO CODE';
-    if(t==='iata') return 'IATA CODE';
-    if(t==='city') return 'CITY';
-    if(t==='name') return 'AIRPORT NAME';
-    return 'ANSWER';
+    if(t==='icao') return this.t('label.icao_code', null, 'ICAO CODE');
+    if(t==='iata') return this.t('label.iata_code', null, 'IATA CODE');
+    if(t==='city') return this.t('label.city', null, 'CITY');
+    if(t==='name') return this.t('label.airport_name', null, 'AIRPORT NAME');
+    return this.t('label.answer', null, 'ANSWER');
   }
 
   nextQuestion(resetSub=false){
     if(!this.pool.length){
-      this.qEl.textContent = 'No airports in this pack (sample DB).';
-      this.subEl.textContent = 'Run the GitHub Action to build full dataset.';
+      this.qEl.textContent = '—';
+      this.subEl.textContent = this.t('srs.sub.no_airports', null, 'No airports in dataset.');
       return;
     }
-    this.current = pick(this.pool);
+
+    this.baseCtx = this.ctx?.pickBase ? this.ctx.pickBase() : null;
+    this.current = this.ctx?.pickAirport ? this.ctx.pickAirport(this.pool) : pick(this.pool);
     this.expectedType = this.pickExpectedType();
+
     const clue = this.clueLabel(this.current);
     this.qEl.textContent = `${this.badge()} ← ${clue}`;
-    if(resetSub) this.subEl.textContent = 'Type answer and press Enter';
 
-    const voice = !!this.voiceEl?.checked;
-    if(voice){
-      try{ speak(this.qEl.textContent, {lang:'en-US', rate:1}); }catch(e){}
+    if(resetSub){
+      const baseLine = (this.ctx?.proMode && this.baseCtx)
+        ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
+        : '';
+      const main = this.t('learn.sub.ready', null, 'Type answer and press Enter');
+      this.subEl.textContent = baseLine ? `${main} • ${baseLine}` : main;
+    }
+
+    if(this.voiceEl?.checked){
+      try{ speak(this.qEl.textContent, { lang: this.voiceLang(), rate: 1 }); }catch(e){}
     }
 
     const mcq = !!this.mcqEl?.checked;
     if(mcq){
-      this.inputEl.style.display='none';
-      this.choicesEl.style.display='grid';
+      if(this.inputEl) this.inputEl.style.display='none';
+      if(this.choicesEl) this.choicesEl.style.display='grid';
       const expected = this.getExpectedAnswer(this.current, this.expectedType);
       const choices = buildChoices({
         pool: this.pool,
@@ -121,10 +148,12 @@ export class Learn {
         n: 4
       });
       this.renderChoices(choices);
-    }else{
-      this.inputEl.style.display='';
-      this.choicesEl.style.display='none';
-      this.choicesEl.innerHTML='';
+    } else {
+      if(this.inputEl) this.inputEl.style.display='';
+      if(this.choicesEl){
+        this.choicesEl.style.display='none';
+        this.choicesEl.innerHTML='';
+      }
     }
   }
 
@@ -136,7 +165,7 @@ export class Learn {
       b.className='choice';
       b.textContent=c;
       b.addEventListener('click', ()=>{
-        this.inputEl.value=c;
+        if(this.inputEl) this.inputEl.value=c;
         this.onEnter();
       });
       this.choicesEl.appendChild(b);
@@ -151,18 +180,16 @@ export class Learn {
   }
 
   clueLabel(a){
-    // Choose a clue that is NOT the expected answer type
     const options = [];
-    if(this.expectedType!=='icao' && a.icao) options.push(`ICAO: ${a.icao}`);
-    if(this.expectedType!=='iata' && a.iata) options.push(`IATA: ${a.iata}`);
-    if(this.expectedType!=='city' && a.city) options.push(`CITY: ${a.city}`);
-    if(this.expectedType!=='name' && a.name) options.push(`NAME: ${a.name}`);
+    if(this.expectedType!=='icao' && a.icao) options.push(`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}`);
+    if(this.expectedType!=='iata' && a.iata) options.push(`${this.t('clue.iata', null, 'IATA')}: ${a.iata}`);
+    if(this.expectedType!=='city' && a.city) options.push(`${this.t('clue.city', null, 'CITY')}: ${a.city}`);
+    if(this.expectedType!=='name' && a.name) options.push(`${this.t('clue.name', null, 'NAME')}: ${a.name}`);
     if(options.length) return pick(options);
-    // fallback
-    if(a.name) return `NAME: ${a.name}`;
-    if(a.city) return `CITY: ${a.city}`;
-    if(a.iata) return `IATA: ${a.iata}`;
-    return `ICAO: ${a.icao||'—'}`;
+    if(a.name) return `${this.t('clue.name', null, 'NAME')}: ${a.name}`;
+    if(a.city) return `${this.t('clue.city', null, 'CITY')}: ${a.city}`;
+    if(a.iata) return `${this.t('clue.iata', null, 'IATA')}: ${a.iata}`;
+    return `${this.t('clue.icao', null, 'ICAO')}: ${a.icao||'—'}`;
   }
 
   getExpectedAnswer(a, t){

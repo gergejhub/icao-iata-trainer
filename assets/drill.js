@@ -1,32 +1,10 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
-import { prettyAirport } from './utils.js';
 
-function resolveKey(indexes, key){
-  if(!indexes || !key) return null;
-  if(key.startsWith('icao:')) return indexes.byICAO?.[key.slice(5).toUpperCase()] || null;
-  if(key.startsWith('iata:')) return indexes.byIATA?.[key.slice(5).toUpperCase()] || null;
-  return null;
-}
-
-function topMistakes(mistakesObj, n=12){
-  const entries = Object.entries(mistakesObj||{}).map(([k,v])=>({k, count:(v?.count||0), last:(v?.last||0)}));
-  entries.sort((a,b)=> (b.count-a.count) || (b.last-a.last));
-  return entries.slice(0,n);
-}
-
-function topConfusions(confObj, kind, n=10){
-  const entries = Object.entries(confObj||{}).map(([k,v])=>({k, count:Number(v||0)}));
-  entries.sort((a,b)=>b.count-a.count);
-  const out=[];
-  for(const it of entries){
-    const m = it.k.match(/^(IATA|ICAO):([^>]+)>(.+)$/);
-    if(!m) continue;
-    if(m[1]!==kind) continue;
-    out.push({expected:m[2], given:m[3], count:it.count});
-    if(out.length>=n) break;
-  }
-  return out;
+function esc(s){
+  return String(s||'').replace(/[&<>"']/g, c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
 }
 
 export class Drill {
@@ -35,88 +13,74 @@ export class Drill {
     this.root = document.getElementById('drill-root');
   }
 
+  t(key, vars=null, fallback=''){ return this.ctx?.t ? this.ctx.t(key, vars, fallback) : (fallback||key); }
+
   render(){
     if(!this.root) return;
-    const indexes = this.ctx?.db?.indexes || {byICAO:{}, byIATA:{}};
-    const mistakes = perf.getMistakes(storage);
-    const conf = perf.getConfusions(storage);
-    const mTop = topMistakes(mistakes, 12).map(x=>({ ...x, a: resolveKey(indexes, x.k) })).filter(x=>x.a);
-    const iTop = topConfusions(conf, 'IATA', 10);
-    const oTop = topConfusions(conf, 'ICAO', 10);
 
-    const btn = (id, label)=> `<button class="ghost" data-drill-action="${id}">${label}</button>`;
+    const hasMistakes = perf.getMistakes(storage).length>0;
 
     this.root.innerHTML = `
-      <div class="kpis" style="grid-template-columns:repeat(3,1fr);">
-        <div class="kpi"><div class="k">Quick actions</div><div class="v" style="font-size:14px; font-weight:800; margin-top:6px; display:flex; flex-wrap:wrap; gap:8px;">
-          ${btn('review', '🔁 Review mistakes')}
-          ${btn('boss-iata', '🧊 Boss IATA')}
-          ${btn('boss-icao', '🧊 Boss ICAO')}
-          ${btn('heatmap', '🗺️ Errors map')}
-          ${btn('brief', '🧾 Brief')}
-        </div></div>
-        <div class="kpi"><div class="k">Most missed airports</div><div class="v">${mTop.length}</div></div>
-        <div class="kpi"><div class="k">Top confusions</div><div class="v">${iTop.length + oTop.length}</div></div>
+      <div class="row" style="flex-wrap:wrap; gap:10px;">
+        <button class="ghost" id="dr-act-review">${esc(this.t('drill.review', null, '🔁 Review mistakes'))}</button>
+        <button class="ghost" id="dr-act-daily">${esc(this.t('pro.daily_btn', null, 'Daily Top20 drill'))}</button>
+        <button class="ghost" id="dr-act-boss-iata">${esc(this.t('drill.boss_iata', null, '🧊 Boss IATA'))}</button>
+        <button class="ghost" id="dr-act-boss-icao">${esc(this.t('drill.boss_icao', null, '🧊 Boss ICAO'))}</button>
+        <button class="ghost" id="dr-act-heatmap">${esc(this.t('drill.errors_map', null, '🗺️ Errors map'))}</button>
+        <button class="ghost" id="dr-act-brief">${esc(this.t('drill.brief', null, '🧾 Brief'))}</button>
       </div>
+      <div class="smallmuted" style="margin-top:10px;">${esc(this.t('drill.quick_actions', null, 'Quick actions'))}</div>
 
-      <div class="grid" style="grid-template-columns:1fr; gap:12px; margin-top:12px;">
-        <div class="card" style="background:rgba(255,255,255,.04)">
-          <div class="card-h"><div class="title">Mistakes leaderboard</div><div class="badge">local browser</div></div>
-          <div class="card-b">
-            ${mTop.length ? `<div class="list">${mTop.map(x=>`<div class="lbrow"><div>${escapeHtml(prettyAirport(x.a))}</div><div class="lbscore">${x.count}×</div></div>`).join('')}</div>` : `<div class="smallmuted">No mistakes recorded yet. Do a Rapid or SRS session first.</div>`}
-          </div>
-        </div>
-
-        <div class="card" style="background:rgba(255,255,255,.04)">
-          <div class="card-h"><div class="title">Confusion pairs</div><div class="badge">IATA + ICAO</div></div>
-          <div class="card-b">
-            <div class="smallmuted">Target these with the Boss Fight packs.</div>
-            <div class="grid" style="grid-template-columns:1fr; gap:10px; margin-top:10px;">
-              <div>
-                <div class="badge">IATA</div>
-                ${iTop.length ? iTop.map(x=>`<div class="lbrow"><div>${escapeHtml(x.expected)} → ${escapeHtml(x.given)}</div><div class="lbscore">${x.count}</div></div>`).join('') : `<div class="smallmuted" style="margin-top:8px;">No IATA confusions yet.</div>`}
-              </div>
-              <div style="margin-top:10px;">
-                <div class="badge">ICAO</div>
-                ${oTop.length ? oTop.map(x=>`<div class="lbrow"><div>${escapeHtml(x.expected)} → ${escapeHtml(x.given)}</div><div class="lbscore">${x.count}</div></div>`).join('') : `<div class="smallmuted" style="margin-top:8px;">No ICAO confusions yet.</div>`}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div style="margin-top:14px;" id="dr-stats"></div>
     `;
 
-    for(const b of this.root.querySelectorAll('[data-drill-action]')){
-      b.addEventListener('click', ()=> this.onAction(b.getAttribute('data-drill-action')));
+    const statsEl = this.root.querySelector('#dr-stats');
+    if(statsEl){
+      const mistakes = perf.topMistakes(storage, 12);
+      const conf = perf.getTopConfusions(storage, 12);
+
+      if(!hasMistakes){
+        statsEl.innerHTML = `<div class="smallmuted">${esc(this.t('drill.no_mistakes', null, 'No mistakes recorded yet.'))}</div>`;
+      } else {
+        const mRows = mistakes.map(m=>`<div class="lbrow"><div>${esc(m.label)}</div><div class="lbscore">${m.count}</div></div>`).join('');
+        const cRows = conf.map(c=>`<div class="lbrow"><div>${esc(c.kind)}: ${esc(c.expected)} → ${esc(c.given)}</div><div class="lbscore">${c.count}</div></div>`).join('');
+        statsEl.innerHTML = `
+          <div class="card" style="margin-top:10px;">
+            <div class="card-h"><h3 style="margin:0; font-size:14px;">${esc(this.t('drill.most_missed', null, 'Most missed airports'))}</h3></div>
+            <div class="card-b"><div class="list">${mRows || `<div class="smallmuted">—</div>`}</div></div>
+          </div>
+          <div class="card" style="margin-top:10px;">
+            <div class="card-h"><h3 style="margin:0; font-size:14px;">${esc(this.t('drill.top_confusions', null, 'Top confusions'))}</h3></div>
+            <div class="card-b"><div class="list">${cRows || `<div class="smallmuted">—</div>`}</div></div>
+          </div>
+        `;
+      }
     }
+
+    const bind = (id, fn)=>{ const el=this.root.querySelector(id); if(el) el.addEventListener('click', fn); };
+
+    bind('#dr-act-review', ()=> this.startPack('review-mistakes'));
+    bind('#dr-act-daily', ()=> this.startDaily());
+    bind('#dr-act-boss-iata', ()=> this.startPack('boss-iata'));
+    bind('#dr-act-boss-icao', ()=> this.startPack('boss-icao'));
+    bind('#dr-act-heatmap', ()=> this.ctx?.showView?.('heatmap'));
+    bind('#dr-act-brief', ()=> this.ctx?.showView?.('brief'));
   }
 
-  onAction(id){
-    if(!id) return;
-    if(id==='heatmap') return this.ctx?.showView?.('heatmap');
-    if(id==='brief') return this.ctx?.showView?.('brief');
-    if(id==='review'){
-      this.ctx?.setPack?.('review-mistakes');
-      this.ctx?.showView?.('srs');
-      this.ctx?.srs?.start?.();
-      return;
-    }
-    if(id==='boss-iata' || id==='boss-icao'){
-      this.ctx?.setPack?.(id);
-      this.ctx?.showView?.('rapid');
-      // try to force MCQ for speed
-      try{
-        const mcq = document.getElementById('rapid-mcq');
-        if(mcq) mcq.checked = true;
-      }catch(e){}
+  startPack(packId){
+    try{ this.ctx?.setPack?.(packId); }catch(e){}
+    // Jump into Rapid set for drills
+    this.ctx?.history?.startRun?.('RAPID');
+    this.ctx?.showView?.('rapid');
+    try{
+      if(this.ctx?.rapid?.setPreset){
+        (function(){try{const modeSel=document.getElementById('rapid-mode');const promptSel=document.getElementById('rapid-prompt');const mcq=document.getElementById('rapid-mcq');const voice=document.getElementById('rapid-voice');if(modeSel) modeSel.value='set30';if(promptSel) promptSel.value='mixed';if(mcq) mcq.checked=true;if(voice) voice.checked=false;}catch(e){}})();
+      }
       this.ctx?.rapid?.startRun?.();
-      return;
-    }
+    }catch(e){}
   }
-}
 
-function escapeHtml(s){
-  return (s||'').toString().replace(/[&<>"']/g, c=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
+  startDaily(){
+    this.startPack('daily-top20');
+  }
 }

@@ -1,27 +1,27 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
-import { buildChoices, pick, shuffleInPlace, speak } from './utils.js';
 import { progress } from './progress.js';
+import { pick, shuffleInPlace, buildChoices, speak } from './utils.js';
 
-function keyAirport(a){
-  return (a?.icao||'')+'|'+(a?.iata||'');
-}
+function now(){ return Date.now(); }
 
-function clueLabel(a, expectedType){
-  const opts=[];
-  if(expectedType!=='icao' && a.icao) opts.push(`ICAO: ${a.icao}`);
-  if(expectedType!=='iata' && a.iata) opts.push(`IATA: ${a.iata}`);
-  if(expectedType!=='city' && a.city) opts.push(`CITY: ${a.city}`);
-  if(expectedType!=='name' && a.name) opts.push(`NAME: ${a.name}`);
-  return opts.length ? pick(opts) : `AIRPORT: ${a.name||a.iata||a.icao||'—'}`;
-}
-
-export class Challenge{
+export class Challenge {
   constructor(ctx, stats, history, leaderboard){
-    this.ctx=ctx;
-    this.stats=stats;
-    this.history=history;
-    this.leaderboard=leaderboard;
+    this.ctx = ctx;
+    this.stats = stats;
+    this.history = history;
+    this.leaderboard = leaderboard;
+
+    this.pool = [];
+    this.running = false;
+    this.timer = null;
+    this.deadline = null;
+    this.score = 0;
+    this.correct = 0;
+    this.wrong = 0;
+    this.expectedType = 'mixed';
+    this.current = null;
+    this.baseCtx = null;
 
     this.durSel = document.getElementById('ch-dur');
     this.voiceEl = document.getElementById('ch-voice');
@@ -32,150 +32,170 @@ export class Challenge{
     this.subEl = document.getElementById('ch-sub');
     this.optsEl = document.getElementById('ch-options');
 
-    this.startBtn?.addEventListener('click', ()=> this.start());
+    this.startBtn?.addEventListener('click', ()=> this.toggle());
+  }
 
-    this.running=false;
-    this.tLeft=0;
-    this.timer=null;
-    this.score=0;
-    this.asked=0;
-    this.correct=0;
-    this.wrong=0;
-    this.current=null;
+  t(key, vars=null, fallback=''){ return this.ctx?.t ? this.ctx.t(key, vars, fallback) : (fallback||key); }
+  voiceLang(){ return this.ctx?.voiceLang ? this.ctx.voiceLang() : 'en-US'; }
+
+  setPool(pool){
+    this.pool = Array.isArray(pool)? pool.slice(): [];
+    shuffleInPlace(this.pool);
+  }
+
+  refreshIdle(){
+    if(!this.subEl) return;
+    this.subEl.textContent = this.t('challenge.sub.mcq', null, 'Multiple choice. Click the correct answer.');
   }
 
   start(){
-    const pool = this.ctx?.currentPool || [];
-    if(pool.length < 20){
-      this.qEl.textContent = 'Pick a bigger pack first (Wizz Network).';
-      this.subEl.textContent = '';
+    this.refreshIdle();
+    this.qEl.textContent = '—';
+  }
+
+  toggle(){
+    if(this.running) this.stop(); else this.run();
+  }
+
+  run(){
+    if(this.pool.length < 8){
+      this.qEl.textContent = '—';
+      this.subEl.textContent = this.t('challenge.need_pool', null, 'Not enough airports in the dataset.');
       return;
     }
-    this.running=true;
-    this.score=0;
-    this.asked=0;
-    this.correct=0;
-    this.wrong=0;
-    const durMin = Number(this.durSel?.value||5);
-    this.tLeft = Math.max(60, Math.round(durMin*60));
-    this.updateHUD();
-    clearInterval(this.timer);
-    this.timer = setInterval(()=>{
-      this.tLeft -= 1;
-      this.updateHUD();
-      if(this.tLeft<=0) this.finish();
-    }, 1000);
+    this.running = true;
+    this.score = 0;
+    this.correct = 0;
+    this.wrong = 0;
+
+    const mins = Math.max(5, Math.min(30, Number(this.durSel?.value||5)));
+    this.deadline = now() + mins*60_000;
+
+    this.tick();
     this.next();
+    this.timer = setInterval(()=> this.tick(), 250);
   }
 
-  finish(){
-    if(!this.running) return;
-    this.running=false;
+  stop(){
+    this.running = false;
     if(this.timer){ clearInterval(this.timer); this.timer=null; }
-    this.subEl.textContent = `Finished. Score=${this.score}. Submit from Scoreboard if you want.`;
-    const durMin = Number(this.durSel?.value||5);
-    const modeLabel = `SHIFT_CHALLENGE_${durMin}M`;
-    this.leaderboard?.setLastRun({ mode: modeLabel, score: this.score, correct: this.correct, wrong: this.wrong, timestamp: Date.now() });
-  }
 
-  updateHUD(){
-    if(this.timeEl) this.timeEl.textContent = this.running ? String(this.tLeft) : '—';
-    if(this.scoreEl) this.scoreEl.textContent = String(this.score);
-  }
+    this.qEl.textContent = this.t('challenge.finished', {score:this.score}, `Finished. Score=${this.score}. Submit from Scoreboard if you want.`);
+    this.subEl.textContent = '';
+    this.optsEl.innerHTML = '';
 
-  next(){
-    if(!this.running) return;
-    const pool = this.ctx?.currentPool || [];
-    const a = pick(pool);
-
-    // Mix in “boss” items if available.
-    const conf = perf.topConfusions(storage, 8);
-    const useBoss = conf.length && Math.random() < 0.20;
-    const expectedType = useBoss ? (conf[0].k.startsWith('ICAO') ? 'icao' : 'iata') : pick(['icao','iata','city','name']);
-
-    const expected = this.getExpectedAnswer(a, expectedType);
-    if(!expected){ return this.next(); }
-
-    const q = `${expectedType.toUpperCase()} ← ${clueLabel(a, expectedType)}`;
-    this.current = { a, expectedType, expected, q };
-    this.qEl.textContent = q;
-    this.subEl.textContent = 'Multiple choice. Click the correct answer.';
-
-    const voice = !!this.voiceEl?.checked;
-    if(voice){ speak(q.replace(/\|/g,' '), {lang:'en-US', rate:1}); }
-
-    const prefer = this.preferDistractors(expectedType, expected);
-    const choices = buildChoices({
-      pool,
-      correct: expected,
-      getter: (x)=> this.getExpectedAnswer(x, expectedType),
-      n: 4,
-      prefer
+    this.leaderboard?.setLastRun?.({
+      mode: 'CHALLENGE',
+      score: this.score,
+      correct: this.correct,
+      wrong: this.wrong,
+      timestamp: Date.now()
     });
-    this.renderChoices(choices, expected);
   }
 
-  preferDistractors(expectedType, expected){
-    const out=[];
-    try{
-      const conf = perf.getConfusions(storage);
-      const kind = expectedType==='icao' ? 'ICAO' : (expectedType==='iata' ? 'IATA' : null);
-      if(!kind) return out;
-      const e = (expected||'').toString().toUpperCase();
-      for(const [k,v] of Object.entries(conf||{})){
-        const m = k.match(/^(IATA|ICAO):([^>]+)>(.+)$/);
-        if(!m) continue;
-        if(m[1]!==kind) continue;
-        if(m[2].toUpperCase()===e) out.push(m[3].toUpperCase());
-      }
-    }catch(e){}
-    return out.slice(0,3);
+  tick(){
+    if(!this.running) return;
+    const left = Math.max(0, this.deadline - now());
+    const sec = Math.ceil(left/1000);
+    if(this.timeEl) this.timeEl.textContent = `${sec}s`;
+    if(this.scoreEl) this.scoreEl.textContent = String(this.score);
+    if(left<=0) this.stop();
   }
 
-  renderChoices(choices, correct){
-    if(!this.optsEl) return;
-    this.optsEl.innerHTML='';
-    for(const c of choices){
-      const b = document.createElement('button');
-      b.className='choice';
-      b.textContent = c;
-      b.addEventListener('click', ()=> this.answer(c, correct, b));
-      this.optsEl.appendChild(b);
-    }
+  pickExpectedType(){
+    const opts = ['icao','iata','city','name'];
+    // Always mixed in challenge
+    return pick(opts);
   }
 
-  answer(choice, correct, btn){
-    if(!this.running || !this.current) return;
-    const ok = (choice||'').toString().toUpperCase() === (correct||'').toString().toUpperCase();
-    this.asked += 1;
-    if(ok) this.correct += 1; else this.wrong += 1;
-    if(ok) this.score += 1; else this.score -= 1;
-    this.updateHUD();
-    this.stats?.record(ok);
-    progress.record(this.ctx?.currentPack?.id, ok);
-
-    if(!ok){
-      perf.recordMistake(storage, this.current.a);
-      const kind = this.current.expectedType==='icao' ? 'ICAO' : (this.current.expectedType==='iata' ? 'IATA' : null);
-      if(kind) perf.recordConfusion(storage, kind, correct, choice);
-    }
-
-    const title = `CHALLENGE | ${this.current.q}`;
-    const detail = ok ? `OK: ${correct}` : `Your: ${choice} • Correct: ${correct}`;
-    this.history?.add({ok, title, detail});
-
-    // flash feedback
-    try{
-      btn.classList.add(ok ? 'good' : 'bad');
-    }catch(e){}
-    setTimeout(()=> this.next(), 500);
+  badge(t){
+    if(t==='icao') return this.t('label.icao_code', null, 'ICAO CODE');
+    if(t==='iata') return this.t('label.iata_code', null, 'IATA CODE');
+    if(t==='city') return this.t('label.city', null, 'CITY');
+    if(t==='name') return this.t('label.airport_name', null, 'AIRPORT NAME');
+    return this.t('label.answer', null, 'ANSWER');
   }
 
-  getExpectedAnswer(a, t){
+  clueLabel(a, expectedType){
+    const options = [];
+    if(expectedType!=='icao' && a.icao) options.push(`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}`);
+    if(expectedType!=='iata' && a.iata) options.push(`${this.t('clue.iata', null, 'IATA')}: ${a.iata}`);
+    if(expectedType!=='city' && a.city) options.push(`${this.t('clue.city', null, 'CITY')}: ${a.city}`);
+    if(expectedType!=='name' && a.name) options.push(`${this.t('clue.name', null, 'NAME')}: ${a.name}`);
+    return options.length ? pick(options) : `${this.t('clue.icao', null, 'ICAO')}: ${a.icao||'—'}`;
+  }
+
+  answerFor(a, t){
     if(t==='icao') return a.icao||'';
     if(t==='iata') return a.iata||'';
     if(t==='city') return a.city||'';
     if(t==='name') return a.name||'';
     return '';
+  }
+
+  next(){
+    if(!this.running) return;
+    const ap = (this.ctx?.pickAirport ? this.ctx.pickAirport(this.pool) : pick(this.pool));
+    this.current = ap;
+    this.expectedType = this.pickExpectedType();
+    this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
+
+    const clue = this.clueLabel(ap, this.expectedType);
+    const badge = this.badge(this.expectedType);
+    this.qEl.textContent = `${badge} ← ${clue}`;
+
+    const hint = (this.ctx?.proMode && this.baseCtx)
+      ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
+      : '';
+    this.subEl.textContent = hint || this.t('challenge.sub.mcq', null, 'Multiple choice. Click the correct answer.');
+
+    if(this.voiceEl?.checked){
+      try{ speak(this.qEl.textContent, { lang: this.voiceLang(), rate: 1}); }catch(e){}
+    }
+
+    const expected = this.answerFor(ap, this.expectedType);
+    const choices = buildChoices({
+      pool: this.pool,
+      correct: expected,
+      getter: (a)=> this.answerFor(a, this.expectedType),
+      n: 4
+    });
+
+    this.optsEl.innerHTML = '';
+    for(const c of choices){
+      const b = document.createElement('button');
+      b.className = 'choice';
+      b.textContent = c;
+      b.addEventListener('click', ()=> this.submit(c));
+      this.optsEl.appendChild(b);
+    }
+  }
+
+  submit(choice){
+    if(!this.running || !this.current) return;
+    const expected = this.answerFor(this.current, this.expectedType);
+    const ok = String(choice||'').trim().toUpperCase() === String(expected||'').trim().toUpperCase();
+
+    this.stats.record(ok);
+    progress.record(this.ctx?.currentPack?.id, ok);
+
+    if(ok){
+      this.score += 1;
+      this.correct += 1;
+    }else{
+      this.score = Math.max(0, this.score - 1);
+      this.wrong += 1;
+      perf.recordMistake(storage, this.current);
+      const kind = (this.expectedType==='iata') ? 'IATA' : (this.expectedType==='icao' ? 'ICAO' : null);
+      if(kind) perf.recordConfusion(storage, kind, expected, choice);
+    }
+
+    const title = `${ok?'✅':'❌'} ${this.qEl.textContent}`;
+    const detail = ok ? this.t('detail.ok', {expected}, `OK: ${expected}`)
+                      : this.t('detail.wrong', {user: choice||'—', expected}, `Your: ${choice||'—'} • Correct: ${expected}`);
+    this.history.add({ok, title, detail});
+
+    // next
+    this.next();
   }
 }

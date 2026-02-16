@@ -102,3 +102,20 @@ input.answer{ width:100%; }
 #heatmap{ height: 70vh; min-height: 420px; border-radius: 14px; overflow:hidden; border:1px solid var(--border); }
 
 textarea{ background: rgba(0,0,0,.18); border:1px solid var(--border); color:var(--text); border-radius: 14px; padding: 10px 12px; }
+
+/* Language flags */
+.flagbtn{
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+  color:inherit;
+  padding:6px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  line-height:1;
+}
+.flagbtn:hover{ background:rgba(255,255,255,.10); }
+.flagbtn.active{
+  border-color: rgba(255,255,255,.35);
+  background: rgba(255,255,255,.14);
+}

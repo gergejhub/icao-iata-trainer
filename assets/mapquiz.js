@@ -39,11 +39,14 @@ export class MapQuiz {
     this.wrong = 0;
     this.expectedType = null;
     this.current = null;
-    this.autoNextMs = 2000; // as requested
+    this.autoNextMs = 2000;
+    this.baseCtx = null;
   }
 
+  t(key, vars=null, fallback=''){ return this.ctx?.t ? this.ctx.t(key, vars, fallback) : (fallback||key); }
+  voiceLang(){ return this.ctx?.voiceLang ? this.ctx.voiceLang() : 'en-US'; }
+
   setPool(pool){
-    // map needs coordinates
     const p = Array.isArray(pool)? pool.slice(): [];
     this.pool = p.filter(a=> Number.isFinite(a.lat) && Number.isFinite(a.lon));
     shuffleInPlace(this.pool);
@@ -51,150 +54,60 @@ export class MapQuiz {
 
   start(){
     this.initMapOnce();
-    this.qEl.textContent = 'Pick mode + prompt, press Start';
-    this.subEl.textContent = `Available airports with coordinates: ${this.pool.length}`;
+    this.qEl.textContent = this.t('map.sub.ready', null, 'Pick mode + prompt, press Start');
+    this.subEl.textContent = this.t('status.dataset', { name: this.ctx?.packName?.(this.ctx?.currentPack?.id, this.ctx?.currentPack?.name)||'', n: this.pool.length }, `Available airports with coordinates: ${this.pool.length}`);
   }
 
   initMapOnce(){
     if(this.map) return;
     this.map = L.map('map', { worldCopyJump:false, zoomControl:true, attributionControl:true }).setView([30,0], 2);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 10, attribution: '&copy; OpenStreetMap' }).addTo(this.map);
+    this.layer = L.layerGroup().addTo(this.map);
 
-    // label-free-ish tiles (CartoDB Positron No Labels)
-    const tiles = 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png';
-    L.tileLayer(tiles, {
-      maxZoom: 10,
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
-    }).addTo(this.map);
-
-    // Click handler
-    this.map.on('click', (e)=> this.onClick(e));
+    this.map.on('click', (e)=>{
+      if(!this.running || !this.current) return;
+      this.onAnswer(e.latlng.lat, e.latlng.lng);
+    });
   }
 
   startRun(){
-    if(!this.pool.length){
-      this.qEl.textContent = 'No airports with coordinates in this pack.';
-      this.subEl.textContent = 'Use Wizz Network (default dataset) or run GitHub Action to build full dataset.';
+    if(this.pool.length < 5){
+      this.qEl.textContent = this.t('challenge.need_pool', null, 'Not enough airports in the dataset.');
       return;
     }
     this.running = true;
     this.asked = 0;
     this.correct = 0;
     this.wrong = 0;
+    this.current = null;
+    this.expectedType = null;
 
-    if(this.mode==='sprint60' || this.mode==='sprint30'){
-      this.tLeft = (this.mode==='sprint30') ? 30 : 60;
-      clearInterval(this.timer);
-      this.timer = setInterval(()=>{
-        this.tLeft -= 1;
-        if(this.tLeft<=0) this.finishRun();
-      }, 1000);
-    }else{
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-    this.nextQuestion(true);
+    // timed modes could be added later; for now practice.
+    this.askNext();
   }
 
-  finishRun(){
-    if(!this.running) return;
-    this.running = false;
-    if(this.timer){ clearInterval(this.timer); this.timer=null; }
-    const score = this.correct;
-    const modeLabel = this.mode==='sprint60' ? 'MAP_SPRINT60'
-      : (this.mode==='sprint30' ? 'MAP_SPRINT30'
-      : (this.mode==='set30' ? 'MAP_SET30' : 'MAP_PRACTICE'));
-    const lastRun = { mode: modeLabel, score, correct: this.correct, wrong: this.wrong, timestamp: Date.now() };
-    this.leaderboard?.setLastRun(lastRun);
-    this.subEl.textContent = `Run finished. Score=${score}. Use Scoreboard → Submit last run.`;
-  }
-
-  onClick(e){
-    if(!this.running || !this.current) return;
-
-    const clickLat = e.latlng.lat;
-    const clickLon = e.latlng.lng;
-    const a = this.current;
-    const dist = kmDistance(clickLat, clickLon, a.lat, a.lon);
-
-    // simple correctness threshold
-    const ok = dist <= 80; // km
-
-    this.stats.record(ok);
-    progress.record(this.ctx?.currentPack?.id, ok);
-    if(!ok) perf.recordMistake(storage, a);
-    this.asked += 1;
-    if(ok) this.correct += 1; else this.wrong += 1;
-
-    // Draw feedback (markers + line) without changing map view
-    this.clearFeedback();
-    this.markerClick = L.circleMarker([clickLat, clickLon], {radius:6}).addTo(this.map);
-    this.markerAns = L.circleMarker([a.lat, a.lon], {radius:6}).addTo(this.map);
-    this.line = L.polyline([[clickLat, clickLon],[a.lat,a.lon]]).addTo(this.map);
-
-    const title = `${this.badge()} | ${this.clueLabel(a)}`;
-    const detail = ok ? `Hit (≈${dist.toFixed(1)} km)` : `Miss (≈${dist.toFixed(1)} km) • Correct: ${this.answerLabel(a)}`;
-    this.history.add({ok, title, detail});
-    this.subEl.textContent = ok ? `✅ Hit (≈${dist.toFixed(1)} km) — next in 2s` : `❌ Miss (≈${dist.toFixed(1)} km) — next in 2s`;
-
-    setTimeout(()=>{
-      if(!this.running) return;
-      if(this.mode==='set30' && this.asked>=30){
-        this.finishRun();
-        return;
-      }
-      if((this.mode==='sprint60' || this.mode==='sprint30') && this.tLeft<=0){
-        this.finishRun();
-        return;
-      }
-      this.clearFeedback();
-      this.nextQuestion();
-    }, this.autoNextMs);
-  }
-
-  clearFeedback(){
-    try{ if(this.markerClick) this.map.removeLayer(this.markerClick); }catch(e){}
-    try{ if(this.markerAns) this.map.removeLayer(this.markerAns); }catch(e){}
-    try{ if(this.line) this.map.removeLayer(this.line); }catch(e){}
-    this.markerClick=null; this.markerAns=null; this.line=null;
+  pickExpectedType(){
+    const p = this.prompt || 'mixed';
+    if(p!=='mixed') return p;
+    return pick(['icao','iata','city','name']);
   }
 
   badge(){
     const t = this.expectedType;
-    if(t==='icao') return 'FIND ON MAP';
-    if(t==='iata') return 'FIND ON MAP';
-    if(t==='city') return 'FIND ON MAP';
-    if(t==='name') return 'FIND ON MAP';
-    return 'FIND ON MAP';
-  }
-
-  pickExpectedType(){
-    const m = this.prompt || 'mixed';
-    if(m!=='mixed') return m;
-    const opts = ['icao','iata','city','name'].filter(t=> this.getExpectedAnswer(this.current||{}, t));
-    return pick(opts.length?opts:['icao']);
+    if(t==='icao') return this.t('label.icao_code', null, 'ICAO CODE');
+    if(t==='iata') return this.t('label.iata_code', null, 'IATA CODE');
+    if(t==='city') return this.t('label.city', null, 'CITY');
+    if(t==='name') return this.t('label.airport_name', null, 'AIRPORT NAME');
+    return this.t('label.answer', null, 'ANSWER');
   }
 
   clueLabel(a){
-    // Here expectedType is "what clue we show", map answer is always click location of airport described by clue
-    if(this.expectedType==='icao') return `ICAO CODE: ${a.icao||'—'}`;
-    if(this.expectedType==='iata') return `IATA CODE: ${a.iata||'—'}`;
-    if(this.expectedType==='city') return `CITY: ${a.city||'—'}`;
-    if(this.expectedType==='name') return `AIRPORT NAME: ${a.name||'—'}`;
-    return `AIRPORT: ${a.name||a.icao||a.iata||'—'}`;
-  }
-
-  answerLabel(a){
-    return `${a.name||'Airport'} (${a.icao||'—'}/${a.iata||'—'}) • ${a.city||''}`;
-  }
-
-  nextQuestion(resetSub=false){
-    this.current = pick(this.pool);
-    this.expectedType = this.pickExpectedType();
-    this.qEl.textContent = this.clueLabel(this.current);
-    if(!!this.voiceEl?.checked){
-      try{ speak(this.qEl.textContent, {lang:'en-US', rate:1}); }catch(e){}
-    }
-    if(resetSub) this.subEl.textContent = 'Click on the map (no Next button)';
+    const opts=[];
+    if(this.expectedType!=='icao' && a.icao) opts.push(`${this.t('clue.icao',null,'ICAO')}: ${a.icao}`);
+    if(this.expectedType!=='iata' && a.iata) opts.push(`${this.t('clue.iata',null,'IATA')}: ${a.iata}`);
+    if(this.expectedType!=='city' && a.city) opts.push(`${this.t('clue.city',null,'CITY')}: ${a.city}`);
+    if(this.expectedType!=='name' && a.name) opts.push(`${this.t('clue.name',null,'NAME')}: ${a.name}`);
+    return opts.length ? pick(opts) : `${this.t('clue.icao',null,'ICAO')}: ${a.icao||'—'}`;
   }
 
   getExpectedAnswer(a, t){
@@ -204,4 +117,62 @@ export class MapQuiz {
     if(t==='name') return a.name||'';
     return '';
   }
+
+  askNext(){
+    this.layer?.clearLayers();
+    this.current = (this.ctx?.pickAirport ? this.ctx.pickAirport(this.pool) : pick(this.pool));
+    this.expectedType = this.pickExpectedType();
+    this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
+
+    const q = `${this.badge()} ← ${this.clueLabel(this.current)}`;
+    this.qEl.textContent = q;
+
+    const baseTxt = (this.baseCtx && this.ctx?.proMode)
+      ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
+      : '';
+    this.subEl.textContent = baseTxt ? `${this.t('map.sub.click', null, 'Click on the map (no Next button)')} • ${baseTxt}` : this.t('map.sub.click', null, 'Click on the map (no Next button)');
+
+    if(this.voiceEl?.checked){
+      speak((this.clueLabel(this.current)||'').toString(), { lang: this.voiceLang() });
+    }
+
+    this.asked += 1;
+    // marker for the answer location (hidden until click)
+    // nothing else
+  }
+
+  onAnswer(lat, lon){
+    if(!this.current) return;
+
+    const dKm = kmDistance(lat, lon, this.current.lat, this.current.lon);
+    const hit = dKm <= 120; // generous hit radius for training
+    this.stats.record(hit);
+    progress.record(this.ctx?.currentPack?.id, hit);
+
+    const expected = this.getExpectedAnswer(this.current, this.expectedType);
+    if(!hit){
+      perf.recordMistake(storage, this.current);
+    }
+
+    // show markers & line
+    const click = L.circleMarker([lat,lon], { radius:8 });
+    const ans = L.circleMarker([this.current.lat, this.current.lon], { radius:8 });
+    click.addTo(this.layer);
+    ans.addTo(this.layer);
+    L.polyline([[lat,lon],[this.current.lat,this.current.lon]]).addTo(this.layer);
+
+    const title = `${this.badge()} | ${this.clueLabel(this.current)}`;
+    const detail = hit
+      ? this.t('detail.hit', { km: Math.round(dKm) }, `Hit (≈${Math.round(dKm)} km)`)
+      : this.t('detail.miss', { km: Math.round(dKm), correct: expected }, `Miss (≈${Math.round(dKm)} km) • Correct: ${expected}`);
+    this.history.add({ok:hit, title, detail});
+
+    // auto-next
+    setTimeout(()=>{
+      if(!this.running) return;
+      this.askNext();
+    }, this.autoNextMs);
+  }
+
+  refreshIdle(){}
 }

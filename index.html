@@ -13,24 +13,29 @@
       <div class="brand">
         <div class="logo">✈︎</div>
         <div>
-          <div class="title">icao-iata-trainer</div>
-          <div class="subtitle">Wizz network packs • Learn / Rapid / Map</div>
+          <div class="title" data-i18n="app.title">icao-iata-trainer</div>
+          <div class="subtitle" data-i18n="app.subtitle">Wizz network • ICAO/IATA training for dispatchers</div>
         </div>
       </div>
 
-      <div class="row" style="flex-wrap:wrap;">
-        <select id="packSelect"></select>
-        <button class="ghost" id="btn-home">Home</button>
-        <button id="btn-learn">Learn</button>
-        <button id="btn-rapid">Rapid</button>
-        <button id="btn-map">Map</button>
-        <button class="ghost" id="btn-drill">Drill</button>
-        <button class="ghost" id="btn-srs">SRS</button>
-        <button class="ghost" id="btn-ops">Ops</button>
-        <button class="ghost" id="btn-challenge">Challenge</button>
-        <button class="ghost" id="btn-brief">Brief</button>
-        <button class="ghost" id="btn-heatmap">Heatmap</button>
-        <button class="ghost" id="btn-reset">Reset</button>
+      <div class="row" style="flex-wrap:wrap; align-items:center;">
+        <button class="ghost" id="btn-home" data-i18n="nav.home">Home</button>
+        <button id="btn-learn" data-i18n="nav.learn">Learn</button>
+        <button id="btn-rapid" data-i18n="nav.rapid">Rapid</button>
+        <button id="btn-map" data-i18n="nav.map">Map</button>
+        <button class="ghost" id="btn-drill" data-i18n="nav.drill">Drill</button>
+        <button class="ghost" id="btn-srs" data-i18n="nav.srs">SRS</button>
+        <button class="ghost" id="btn-ops" data-i18n="nav.ops">Ops</button>
+        <button class="ghost" id="btn-challenge" data-i18n="nav.challenge">Challenge</button>
+        <button class="ghost" id="btn-brief" data-i18n="nav.brief">Brief</button>
+        <button class="ghost" id="btn-heatmap" data-i18n="nav.heatmap">Heatmap</button>
+        <button class="ghost" id="btn-reset" data-i18n="nav.reset">Reset</button>
+
+         <span class="badge" data-i18n="ui.language_label" style="margin-left:8px;">NYELV</span>
+        <div class="lang" style="display:inline-flex; gap:6px; align-items:center;">
+          <button class="flagbtn" id="lang-hu" data-i18n-title="ui.lang_hu_title" title="Magyar">🇭🇺</button>
+          <button class="flagbtn" id="lang-en" data-i18n-title="ui.lang_en_title" title="English">🇬🇧</button>
+        </div>
       </div>
     </div>
 
@@ -38,52 +43,61 @@
       <div>
         <div class="card">
           <div class="card-h">
-            <h2 style="margin:0;">Progress</h2>
+            <h2 style="margin:0;" data-i18n="progress.title">Progress</h2>
             <span class="badge" id="status">—</span>
           </div>
           <div class="card-b">
             <div class="kpis">
-              <div class="kpi"><div class="k">Total</div><div class="v" id="kpi-total">0</div></div>
-              <div class="kpi"><div class="k">Correct</div><div class="v" id="kpi-ok">0</div></div>
-              <div class="kpi"><div class="k">Wrong</div><div class="v" id="kpi-bad">0</div></div>
-              <div class="kpi"><div class="k">Accuracy</div><div class="v" id="kpi-acc">0%</div></div>
+              <div class="kpi"><div class="k" data-i18n="kpi.total">Total</div><div class="v" id="kpi-total">0</div></div>
+              <div class="kpi"><div class="k" data-i18n="kpi.correct">Correct</div><div class="v" id="kpi-ok">0</div></div>
+              <div class="kpi"><div class="k" data-i18n="kpi.wrong">Wrong</div><div class="v" id="kpi-bad">0</div></div>
+              <div class="kpi"><div class="k" data-i18n="kpi.accuracy">Accuracy</div><div class="v" id="kpi-acc">0%</div></div>
             </div>
           </div>
         </div>
 
         <div class="card" data-view="home" style="margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">Home</h2><span class="badge">Pick a mode</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="home.title">Home</h2><span class="badge" data-i18n="home.badge">Pick a mode</span></div>
           <div class="card-b">
-            <div class="smallmuted">Tip: open Scoreboard on the right. Nickname is stored in your browser.</div>
-            <div class="row" style="margin-top:10px; flex-wrap:wrap;">
-              <label class="toggle"><input type="checkbox" id="pathLock"/> Learning path lock (Bases → Network → Regions)</label>
-            </div>
-            <div id="pathStatus" style="margin-top:10px;"></div>
+            <div class="smallmuted" data-i18n="home.tip">Tip: open Scoreboard on the right. Nickname is stored in your browser.</div>
+            <div class="smallmuted" data-i18n="home.dataset" style="margin-top:8px;">Dataset: Wizz network only (no global airports).</div>
+
+<div class="row" style="flex-wrap:wrap; margin-top:12px; gap:10px; align-items:center;">
+  <label class="toggle">
+    <input type="checkbox" id="proMode"/>
+    <span data-i18n="pro.toggle">Profi diszpécser mód</span>
+  </label>
+  <button class="ghost" id="home-daily" data-i18n="pro.daily_btn">Napi Top20 keverés drill</button>
+</div>
+<div class="smallmuted" data-i18n="pro.desc" style="margin-top:6px;">
+  Base↔outstation fókusz, bases súlyozás, és a leggyakoribb keveréseidből automata napi gyakorlás.
+</div>
+
           </div>
         </div>
 
         <div class="card" data-view="learn" style="display:none; margin-top:14px;">
           <div class="card-h">
-            <h2 style="margin:0;">Learn</h2>
-            <span class="badge">Enter: check • Enter: next</span>
+            <h2 style="margin:0;" data-i18n="learn.title">Learn</h2>
+            <span class="badge" data-i18n="badge.enter_next">Enter: check • Enter: next</span>
           </div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
-              <span class="smallmuted">Expected:</span>
+              <span class="smallmuted" data-i18n="ui.expected">Expected:</span>
               <select id="learn-prompt">
-                <option value="mixed">Mixed</option>
-                <option value="icao">ICAO CODE</option>
-                <option value="iata">IATA CODE</option>
-                <option value="city">CITY</option>
-                <option value="name">AIRPORT NAME</option>
+                <option value="mixed" data-i18n="prompt.mixed">Kevert</option>
+                <option value="icao" data-i18n="prompt.icao">ICAO KÓD</option>
+                <option value="iata" data-i18n="prompt.iata">IATA KÓD</option>
+                <option value="city" data-i18n="prompt.city">VÁROS</option>
+                <option value="name" data-i18n="prompt.name">REPÜLŐTÉR NÉV</option>
               </select>
-              <label class="toggle"><input type="checkbox" id="learn-mcq"/> MCQ</label>
-              <label class="toggle"><input type="checkbox" id="learn-voice"/> Voice</label>
+              <label class="toggle"><input type="checkbox" id="learn-mcq"/> <span data-i18n="ui.mcq">MCQ</span></label>
+              <label class="toggle"><input type="checkbox" id="learn-voice"/> <span data-i18n="ui.voice">Voice</span></label>
             </div>
             <div class="big" id="learn-q" style="margin-top:12px;">—</div>
             <div class="smallmuted" id="learn-sub" style="margin-top:6px;">—</div>
             <div class="row" style="margin-top:10px;">
-              <input class="answer" id="learn-input" placeholder="Type answer… then press Enter" autocomplete="off" />
+              <input class="answer" id="learn-input" data-i18n-placeholder="learn.placeholder" placeholder="Írd be a választ… majd Enter" autocomplete="off" />
             </div>
             <div id="learn-choices" class="choices" style="display:none; margin-top:10px;"></div>
           </div>
@@ -91,27 +105,27 @@
 
         <div class="card" data-view="rapid" style="display:none; margin-top:14px;">
           <div class="card-h">
-            <h2 style="margin:0;">Rapid</h2>
-            <span class="badge">Enter: check • Enter: next</span>
+            <h2 style="margin:0;" data-i18n="rapid.title">Rapid</h2>
+            <span class="badge" data-i18n="badge.enter_next">Enter: check • Enter: next</span>
           </div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
               <select id="rapid-mode">
-                <option value="sprint60">Sprint 60s</option>
-                <option value="sprint30">Sprint 30s</option>
-                <option value="set30">Set of 30</option>
+                <option value="sprint60" data-i18n="rapid.mode.sprint60">Sprint 60 mp</option>
+                <option value="sprint30" data-i18n="rapid.mode.sprint30">Sprint 30 mp</option>
+                <option value="set30" data-i18n="rapid.mode.set30">30-as szett</option>
               </select>
               <select id="rapid-prompt">
-                <option value="mixed">Mixed</option>
-                <option value="icao">ICAO CODE</option>
-                <option value="iata">IATA CODE</option>
-                <option value="city">CITY</option>
-                <option value="name">AIRPORT NAME</option>
+                <option value="mixed" data-i18n="prompt.mixed">Kevert</option>
+                <option value="icao" data-i18n="prompt.icao">ICAO KÓD</option>
+                <option value="iata" data-i18n="prompt.iata">IATA KÓD</option>
+                <option value="city" data-i18n="prompt.city">VÁROS</option>
+                <option value="name" data-i18n="prompt.name">REPÜLŐTÉR NÉV</option>
               </select>
-              <button class="primary" id="rapid-start">Start</button>
-              <label class="toggle"><input type="checkbox" id="rapid-mcq"/> MCQ</label>
-              <label class="toggle"><input type="checkbox" id="rapid-voice"/> Voice</label>
-              <span class="smallmuted">Time: <b id="rapid-time">—</b></span>
+              <button class="primary" id="rapid-start" data-i18n="ui.start">Start</button>
+              <label class="toggle"><input type="checkbox" id="rapid-mcq"/> <span data-i18n="ui.mcq">MCQ</span></label>
+              <label class="toggle"><input type="checkbox" id="rapid-voice"/> <span data-i18n="ui.voice">Voice</span></label>
+              <span class="smallmuted"><span data-i18n="ui.time">Time:</span> <b id="rapid-time">—</b></span>
               <span class="smallmuted">✅ <b id="rapid-ok">0</b></span>
               <span class="smallmuted">❌ <b id="rapid-bad">0</b></span>
             </div>
@@ -120,7 +134,7 @@
             <div class="smallmuted" id="rapid-sub" style="margin-top:6px;">—</div>
 
             <div class="row" style="margin-top:10px;">
-              <input class="answer" id="rapid-input" placeholder="Type answer… then press Enter" autocomplete="off" />
+              <input class="answer" id="rapid-input" data-i18n-placeholder="rapid.placeholder" placeholder="Írd be a választ… majd Enter" autocomplete="off" />
             </div>
             <div id="rapid-choices" class="choices" style="display:none; margin-top:10px;"></div>
           </div>
@@ -128,26 +142,26 @@
 
         <div class="card" data-view="map" style="display:none; margin-top:14px;">
           <div class="card-h">
-            <h2 style="margin:0;">Map</h2>
-            <span class="badge">Click map • auto-next in 2s</span>
+            <h2 style="margin:0;" data-i18n="map.title">Map</h2>
+            <span class="badge" data-i18n="badge.map_click">Click map • auto-next in 2s</span>
           </div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
               <select id="map-mode">
-                <option value="practice">Practice</option>
-                <option value="sprint60">Sprint 60s</option>
-                <option value="sprint30">Sprint 30s</option>
-                <option value="set30">Set of 30</option>
+                <option value="practice" data-i18n="map.mode.practice">Gyakorlás</option>
+                <option value="sprint60" data-i18n="rapid.mode.sprint60">Sprint 60 mp</option>
+                <option value="sprint30" data-i18n="rapid.mode.sprint30">Sprint 30 mp</option>
+                <option value="set30" data-i18n="rapid.mode.set30">30-as szett</option>
               </select>
               <select id="map-prompt">
-                <option value="mixed">Mixed</option>
-                <option value="icao">ICAO CODE</option>
-                <option value="iata">IATA CODE</option>
-                <option value="city">CITY</option>
-                <option value="name">AIRPORT NAME</option>
+                <option value="mixed" data-i18n="prompt.mixed">Kevert</option>
+                <option value="icao" data-i18n="prompt.icao">ICAO KÓD</option>
+                <option value="iata" data-i18n="prompt.iata">IATA KÓD</option>
+                <option value="city" data-i18n="prompt.city">VÁROS</option>
+                <option value="name" data-i18n="prompt.name">REPÜLŐTÉR NÉV</option>
               </select>
-              <button class="primary" id="map-start">Start</button>
-              <label class="toggle"><input type="checkbox" id="map-voice"/> Voice</label>
+              <button class="primary" id="map-start" data-i18n="ui.start">Start</button>
+              <label class="toggle"><input type="checkbox" id="map-voice"/> <span data-i18n="ui.voice">Voice</span></label>
             </div>
 
             <div class="big" id="map-q" style="margin-top:12px;">—</div>
@@ -157,23 +171,23 @@
         </div>
 
         <div class="card" data-view="drill" style="display:none; margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">Drill</h2><span class="badge">optional</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="drill.title">Drill</h2><span class="badge" data-i18n="badge.optional">optional</span></div>
           <div class="card-b" id="drill-root">—</div>
         </div>
 
         <div class="card" data-view="srs" style="display:none; margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">SRS</h2><span class="badge" id="srs-due">—</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="srs.title">SRS</h2><span class="badge" id="srs-due">—</span></div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
-              <label class="toggle"><input type="checkbox" id="srs-mcq"/> MCQ</label>
-              <label class="toggle"><input type="checkbox" id="srs-voice"/> Voice</label>
-              <button class="ghost" id="srs-show">Show</button>
-              <span class="smallmuted">(Enter also reveals)</span>
+              <label class="toggle"><input type="checkbox" id="srs-mcq"/> <span data-i18n="ui.mcq">MCQ</span></label>
+              <label class="toggle"><input type="checkbox" id="srs-voice"/> <span data-i18n="ui.voice">Voice</span></label>
+              <button class="ghost" id="srs-show" data-i18n="srs.show">Show</button>
+              <span class="smallmuted" data-i18n="srs.enter_reveals">(Enter also reveals)</span>
             </div>
             <div class="big" id="srs-q" style="margin-top:12px;">—</div>
             <div class="smallmuted" id="srs-sub" style="margin-top:6px;">—</div>
             <div class="row" style="margin-top:10px;">
-              <input class="answer" id="srs-input" placeholder="Type answer…" autocomplete="off" />
+              <input class="answer" id="srs-input" data-i18n-placeholder="srs.placeholder" placeholder="Írd be a választ…" autocomplete="off" />
             </div>
             <div id="srs-choices" class="choices" style="display:none; margin-top:10px;"></div>
 
@@ -182,58 +196,58 @@
             </div>
 
             <div id="srs-grades" class="grades" style="display:none; margin-top:12px;">
-              <button class="choice" data-srs-grade="again">Again</button>
-              <button class="choice" data-srs-grade="hard">Hard</button>
-              <button class="choice" data-srs-grade="good">Good</button>
-              <button class="choice" data-srs-grade="easy">Easy</button>
+              <button class="choice" data-srs-grade="again" data-i18n="srs.grade.again">Again</button>
+              <button class="choice" data-srs-grade="hard" data-i18n="srs.grade.hard">Hard</button>
+              <button class="choice" data-srs-grade="good" data-i18n="srs.grade.good">Good</button>
+              <button class="choice" data-srs-grade="easy" data-i18n="srs.grade.easy">Easy</button>
             </div>
           </div>
         </div>
 
         <div class="card" data-view="brief" style="display:none; margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">Brief generator</h2><span class="badge">20–60s</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="brief.title">Brief generator</h2><span class="badge">20–60s</span></div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
               <select id="brief-lang">
-                <option value="en">English</option>
-                <option value="hu">Magyar</option>
+                <option value="en" data-i18n="brief.lang.en">Angol</option>
+                <option value="hu" data-i18n="brief.lang.hu">Magyar</option>
               </select>
               <select id="brief-len">
                 <option value="20">~20s</option>
                 <option value="40" selected>~40s</option>
                 <option value="60">~60s</option>
               </select>
-              <button class="primary" id="brief-gen">Generate</button>
-              <button class="ghost" id="brief-copy">Copy</button>
+              <button class="primary" id="brief-gen" data-i18n="brief.generate">Generate</button>
+              <button class="ghost" id="brief-copy" data-i18n="brief.copy">Copy</button>
             </div>
             <textarea id="brief-out" style="width:100%; min-height:140px; margin-top:10px;"></textarea>
           </div>
         </div>
 
         <div class="card" data-view="heatmap" style="display:none; margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">Error heatmap</h2><span class="badge">Leaflet</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="heatmap.title">Error heatmap</h2><span class="badge">Leaflet</span></div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
-              <span class="smallmuted">Min mistakes:</span>
+              <span class="smallmuted" data-i18n="heatmap.min">Min mistakes:</span>
               <input type="range" id="hm-min" min="1" max="10" value="1" />
-              <label class="toggle"><input type="checkbox" id="hm-onlypack"/> Only current pack</label>
-              <button class="ghost" id="hm-refresh">Refresh</button>
-              <button class="ghost" id="hm-export">Export mistakes CSV</button>
-              <button class="ghost" id="hm-export2">Export confusions CSV</button>
+              <label class="toggle"><input type="checkbox" id="hm-onlypack"/> <span data-i18n="heatmap.only_current">Only current set</span></label>
+              <button class="ghost" id="hm-refresh" data-i18n="ui.refresh">Refresh</button>
+              <button class="ghost" id="hm-export" data-i18n="heatmap.export_mistakes">Export mistakes CSV</button>
+              <button class="ghost" id="hm-export2" data-i18n="heatmap.export_confusions">Export confusions CSV</button>
             </div>
             <div id="heatmap" style="margin-top:12px;"></div>
           </div>
         </div>
 
         <div class="card" data-view="ops" style="display:none; margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">Ops drill</h2><span class="badge">Routes & alternates</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="ops.title">Ops drill</h2><span class="badge" data-i18n="ops.badge">Routes & alternates</span></div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
               <select id="ops-mode">
-                <option value="alternates" selected>Alternates</option>
+                <option value="alternates" selected data-i18n="ops.mode.alternates">Alternates</option>
               </select>
-              <button class="primary" id="ops-start">Start</button>
-              <span class="smallmuted">Score: <b id="ops-score">0</b></span>
+              <button class="primary" id="ops-start" data-i18n="ui.start">Start</button>
+              <span class="smallmuted"><span data-i18n="ui.score">Score:</span> <b id="ops-score">0</b></span>
             </div>
             <div class="big" id="ops-q" style="margin-top:12px;">—</div>
             <div class="smallmuted" id="ops-sub" style="margin-top:6px;">—</div>
@@ -242,18 +256,18 @@
         </div>
 
         <div class="card" data-view="challenge" style="display:none; margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">Shift Challenge</h2><span class="badge">mixed</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="challenge.title">Shift Challenge</h2><span class="badge" data-i18n="challenge.badge">mixed</span></div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
               <select id="ch-dur">
-                <option value="5" selected>5 min</option>
-                <option value="10">10 min</option>
-                <option value="15">15 min</option>
+                <option value="5" selected data-i18n="challenge.dur.5">5 perc</option>
+                <option value="10" data-i18n="challenge.dur.10">10 perc</option>
+                <option value="15" data-i18n="challenge.dur.15">15 perc</option>
               </select>
-              <label class="toggle"><input type="checkbox" id="ch-voice"/> Voice</label>
-              <button class="primary" id="ch-start">Start</button>
-              <span class="smallmuted">Time: <b id="ch-time">—</b></span>
-              <span class="smallmuted">Score: <b id="ch-score">0</b></span>
+              <label class="toggle"><input type="checkbox" id="ch-voice"/> <span data-i18n="ui.voice">Voice</span></label>
+              <button class="primary" id="ch-start" data-i18n="ui.start">Start</button>
+              <span class="smallmuted"><span data-i18n="ui.time">Time:</span> <b id="ch-time">—</b></span>
+              <span class="smallmuted"><span data-i18n="ui.score">Score:</span> <b id="ch-score">0</b></span>
             </div>
             <div class="big" id="ch-q" style="margin-top:12px;">—</div>
             <div class="smallmuted" id="ch-sub" style="margin-top:6px;">—</div>
@@ -264,23 +278,23 @@
 
       <div class="sidebar">
         <div class="card" id="history">
-          <div class="card-h"><h2 style="margin:0;">History</h2><span class="badge">this run</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="history.title">History</h2><span class="badge" data-i18n="history.badge">this run</span></div>
           <div class="card-b">
             <div id="history-meta" class="smallmuted">—</div>
             <div id="history-list" class="history"></div>
             <div class="row" style="margin-top:10px;">
-              <button class="ghost" id="history-clear">Clear</button>
+              <button class="ghost" id="history-clear" data-i18n="ui.clear">Clear</button>
             </div>
           </div>
         </div>
 
         <div class="card" id="leaderboard" style="margin-top:14px;">
-          <div class="card-h"><h2 style="margin:0;">Scoreboard</h2><span class="badge">GitHub Issues</span></div>
+          <div class="card-h"><h2 style="margin:0;" data-i18n="scoreboard.title">Scoreboard</h2><span class="badge" data-i18n="scoreboard.badge">GitHub Issues</span></div>
           <div class="card-b">
             <div class="row" style="flex-wrap:wrap;">
-              <input id="nickname" placeholder="Nickname (for submit)" style="flex:1; min-width:180px;" />
-              <button class="ghost" id="lb-refresh">Refresh</button>
-              <button class="primary" id="lb-submit">Submit last run</button>
+              <input id="nickname" data-i18n-placeholder="scoreboard.nickname" placeholder="Nickname (for submit)" style="flex:1; min-width:180px;" />
+              <button class="ghost" id="lb-refresh" data-i18n="ui.refresh">Refresh</button>
+              <button class="primary" id="lb-submit" data-i18n="scoreboard.submit">Submit last run</button>
             </div>
             <div class="smallmuted" id="lb-status" style="margin-top:8px;">—</div>
             <div id="lb-list" style="margin-top:10px;"></div>
