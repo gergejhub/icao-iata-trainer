@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { pick, shuffleInPlace, buildChoices, speak, showPopup, setQuestion, setQuestionText, filterClueOptions } from './utils.js';
+import { pickMixedType, renderQuestion, pick, shuffleInPlace, buildChoices, speak, showPopup } from './utils.js';
 
 function now(){ return Date.now(); }
 
@@ -21,6 +21,7 @@ export class Challenge {
     this.wrong = 0;
     this.expectedType = 'mixed';
     this.current = null;
+    this.currentClue = null;
     this.baseCtx = null;
 
     this.durSel = document.getElementById('ch-dur');
@@ -50,7 +51,7 @@ export class Challenge {
 
   start(){
     this.refreshIdle();
-    setQuestionText(this.qEl, '—');
+    this.qEl.textContent = '—';
   }
 
   toggle(){
@@ -59,7 +60,7 @@ export class Challenge {
 
   run(){
     if(this.pool.length < 8){
-      setQuestionText(this.qEl, '—');
+      this.qEl.textContent = '—';
       this.subEl.textContent = this.t('challenge.need_pool', null, 'Not enough airports in the dataset.');
       return;
     }
@@ -80,7 +81,7 @@ export class Challenge {
     this.running = false;
     if(this.timer){ clearInterval(this.timer); this.timer=null; }
 
-    setQuestionText(this.qEl, this.t('challenge.finished', {score:this.score}, `Finished. Score=${this.score}. Submit from Scoreboard if you want.`));
+    this.qEl.textContent = this.t('challenge.finished', {score:this.score}, `Finished. Score=${this.score}. Submit from Scoreboard if you want.`);
     this.subEl.textContent = '';
     this.optsEl.innerHTML = '';
 
@@ -111,9 +112,9 @@ export class Challenge {
   }
 
   pickExpectedType(){
-    const opts = ['icao','iata','city'];
-    // Always mixed in challenge
-    return pick(opts);
+    // Always mixed in challenge (weighted, city is rarer)
+    const opts = ['icao','iata','city'].filter(t=> this.answerFor(this.current||{}, t));
+    return pickMixedType(opts.length?opts:['icao']);
   }
 
   badge(t){
@@ -123,20 +124,14 @@ export class Challenge {
     return this.t('label.answer', null, 'ANSWER');
   }
 
-  clueLabel(a, expectedType){
-    const options = [];
-    if(expectedType!=='icao' && a.icao) options.push({ type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` });
-    if(expectedType!=='iata' && a.iata) options.push({ type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` });
-    if(expectedType!=='city' && a.city) options.push({ type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` });
-    if(options.length){
-      const expected = this.answerFor(a, expectedType);
-      const safe = filterClueOptions(options, expected, expectedType);
-      return pick(safe.length ? safe : options);
-    }
-    if(a.city) return { type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` };
-    if(a.iata) return { type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` };
-    if(a.icao) return { type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` };
-    return { type:'other', text:'—' };
+  pickClue(a, expectedType){
+    const exp = (expectedType||'').toLowerCase();
+    const opts=[];
+    if(exp !== 'icao' && a.icao) opts.push({ type:'icao', label:this.t('clue.icao', null, 'ICAO'), value:a.icao });
+    if(exp !== 'iata' && a.iata) opts.push({ type:'iata', label:this.t('clue.iata', null, 'IATA'), value:a.iata });
+    // CITY as clue only when expected is a code. If expected is CITY, clues are codes only.
+    if((exp === 'icao' || exp === 'iata') && a.city) opts.push({ type:'city', label:this.t('clue.city', null, 'CITY'), value:a.city });
+    return opts.length ? pick(opts) : { type:'icao', label:this.t('clue.icao', null, 'ICAO'), value:(a.icao||'—') };
   }
 
   answerFor(a, t){
@@ -153,10 +148,15 @@ export class Challenge {
     this.expectedType = this.pickExpectedType();
     this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
 
-    const clue = this.clueLabel(ap, this.expectedType);
+    const clue = this.pickClue(ap, this.expectedType);
     this.currentClue = clue;
-    const badge = this.badge(this.expectedType);
-    setQuestion(this.qEl, clue.text, this.expectedType, badge, clue.type);
+    renderQuestion(this.qEl, {
+      clueType: clue.type,
+      clueLabel: clue.label,
+      clueValue: clue.value,
+      expectedType: this.expectedType,
+      expectedLabel: this.badge(this.expectedType)
+    });
 
     const hint = (this.ctx?.proMode && this.baseCtx)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
@@ -164,7 +164,7 @@ export class Challenge {
     this.subEl.textContent = hint || this.t('challenge.sub.mcq', null, 'Multiple choice. Click the correct answer.');
 
     if(this.voiceEl?.checked){
-      try{ speak(this.qEl.textContent, { lang: this.voiceLang(), rate: 1}); }catch(e){}
+      try{ speak((this.qEl?.dataset?.clueValue||'').toString() || (clue.value||''), { lang: this.voiceLang(), rate: 1}); }catch(e){}
     }
 
     const expected = this.answerFor(ap, this.expectedType);
@@ -204,10 +204,11 @@ export class Challenge {
       if(kind) perf.recordConfusion(storage, kind, expected, choice);
     }
 
-    const title = `${ok?'✅':'❌'} ${this.qEl.textContent}`;
+    const qPlain = (this.qEl?.dataset?.plain || this.qEl.textContent || '').trim();
+    const title = `${ok?'✅':'❌'} ${qPlain}`;
     const detail = ok ? this.t('detail.ok', {expected}, `OK: ${expected}`)
                       : this.t('detail.wrong', {user: choice||'—', expected}, `Your: ${choice||'—'} • Correct: ${expected}`);
-    this.history.add({ ok, title, detail, airport: this.current });
+    this.history.add({ok, title, detail});
 
     // next
     this.next();

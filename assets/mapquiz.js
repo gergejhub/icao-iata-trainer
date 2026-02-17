@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { kmDistance, pick, shuffleInPlace, speak, setQuestion, setQuestionText, filterClueOptions } from './utils.js';
+import { kmDistance, pickMixedType, renderQuestion, pick, shuffleInPlace, speak } from './utils.js';
 
 export class MapQuiz {
   constructor(stats, history, leaderboard, ctx){
@@ -16,6 +16,7 @@ export class MapQuiz {
     this.line = null;
     this.markerClick = null;
     this.markerAns = null;
+    this.currentClue = null;
 
     this.modeSel = document.getElementById('map-mode');
     this.promptSel = document.getElementById('map-prompt');
@@ -28,7 +29,7 @@ export class MapQuiz {
     this.prompt = 'mixed';
 
     this.modeSel?.addEventListener('change', ()=> this.mode=this.modeSel.value);
-    this.promptSel?.addEventListener('change', ()=> { const v=this.promptSel.value; this.prompt = (v==='icao'||v==='iata'||v==='city'||v==='mixed')?v:'mixed'; });
+    this.promptSel?.addEventListener('change', ()=> this.prompt=this.promptSel.value);
     this.startBtn?.addEventListener('click', ()=> this.startRun());
 
     this.running = false;
@@ -54,7 +55,7 @@ export class MapQuiz {
 
   start(){
     this.initMapOnce();
-    setQuestionText(this.qEl, this.t('map.sub.ready', null, 'Pick mode + prompt, press Start'));
+    this.qEl.textContent = this.t('map.sub.ready', null, 'Pick mode + prompt, press Start');
     this.subEl.textContent = this.t('status.dataset', { name: this.ctx?.packName?.(this.ctx?.currentPack?.id, this.ctx?.currentPack?.name)||'', n: this.pool.length }, `Available airports with coordinates: ${this.pool.length}`);
   }
 
@@ -72,7 +73,7 @@ export class MapQuiz {
 
   startRun(){
     if(this.pool.length < 5){
-      setQuestionText(this.qEl, this.t('challenge.need_pool', null, 'Not enough airports in the dataset.'));
+      this.qEl.textContent = this.t('challenge.need_pool', null, 'Not enough airports in the dataset.');
       return;
     }
     this.running = true;
@@ -87,10 +88,10 @@ export class MapQuiz {
   }
 
   pickExpectedType(){
-    const raw = this.prompt || 'mixed';
-    const p = (raw==='icao'||raw==='iata'||raw==='city'||raw==='mixed') ? raw : 'mixed';
-    if(p!=='mixed') return p;
-    return pick(['icao','iata','city']);
+    const p = this.prompt || 'mixed';
+    if(p!=='mixed') return (p==='name') ? 'mixed' : p;
+    const opts = ['icao','iata','city'].filter(t=> this.getExpectedAnswer(this.current||{}, t));
+    return pickMixedType(opts.length?opts:['icao']);
   }
 
   badge(){
@@ -101,20 +102,13 @@ export class MapQuiz {
     return this.t('label.answer', null, 'ANSWER');
   }
 
-  clueLabel(a){
+  pickClue(a){
+    const exp = (this.expectedType||'').toLowerCase();
     const opts=[];
-    if(this.expectedType!=='icao' && a.icao) opts.push({ type:'icao', text:`${this.t('clue.icao',null,'ICAO')}: ${a.icao}` });
-    if(this.expectedType!=='iata' && a.iata) opts.push({ type:'iata', text:`${this.t('clue.iata',null,'IATA')}: ${a.iata}` });
-    if(this.expectedType!=='city' && a.city) opts.push({ type:'city', text:`${this.t('clue.city',null,'CITY')}: ${a.city}` });
-    if(opts.length){
-      const expected = this.getExpectedAnswer(a, this.expectedType);
-      const safe = filterClueOptions(opts, expected, this.expectedType);
-      return pick(safe.length ? safe : opts);
-    }
-    if(a.city) return { type:'city', text:`${this.t('clue.city',null,'CITY')}: ${a.city}` };
-    if(a.iata) return { type:'iata', text:`${this.t('clue.iata',null,'IATA')}: ${a.iata}` };
-    if(a.icao) return { type:'icao', text:`${this.t('clue.icao',null,'ICAO')}: ${a.icao}` };
-    return { type:'other', text:'—' };
+    if(exp !== 'icao' && a.icao) opts.push({ type:'icao', label:this.t('clue.icao',null,'ICAO'), value:a.icao });
+    if(exp !== 'iata' && a.iata) opts.push({ type:'iata', label:this.t('clue.iata',null,'IATA'), value:a.iata });
+    if((exp === 'icao' || exp === 'iata') && a.city) opts.push({ type:'city', label:this.t('clue.city',null,'CITY'), value:a.city });
+    return opts.length ? pick(opts) : { type:'icao', label:this.t('clue.icao',null,'ICAO'), value:(a.icao||'—') };
   }
 
   getExpectedAnswer(a, t){
@@ -130,9 +124,15 @@ export class MapQuiz {
     this.expectedType = this.pickExpectedType();
     this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
 
-    const clue = this.clueLabel(this.current);
+    const clue = this.pickClue(this.current);
     this.currentClue = clue;
-    setQuestion(this.qEl, clue.text, this.expectedType, this.badge(), clue.type);
+    renderQuestion(this.qEl, {
+      clueType: clue.type,
+      clueLabel: clue.label,
+      clueValue: clue.value,
+      expectedType: this.expectedType,
+      expectedLabel: this.badge()
+    });
 
     const baseTxt = (this.baseCtx && this.ctx?.proMode)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
@@ -140,7 +140,7 @@ export class MapQuiz {
     this.subEl.textContent = baseTxt ? `${this.t('map.sub.click', null, 'Click on the map (no Next button)')} • ${baseTxt}` : this.t('map.sub.click', null, 'Click on the map (no Next button)');
 
     if(this.voiceEl?.checked){
-      speak((this.currentClue?.text || this.clueLabel(this.current).text), { lang: this.voiceLang() });
+      speak((this.qEl?.dataset?.clueValue||'').toString() || (clue.value||''), { lang: this.voiceLang() });
     }
 
     this.asked += 1;
@@ -168,11 +168,12 @@ export class MapQuiz {
     ans.addTo(this.layer);
     L.polyline([[lat,lon],[this.current.lat,this.current.lon]]).addTo(this.layer);
 
-    const title = `${this.badge()} | ${(this.currentClue?.text)||this.clueLabel(this.current).text}`;
+    const clue = this.currentClue || this.pickClue(this.current);
+    const title = `${this.badge()} | ${clue.label}: ${clue.value}`;
     const detail = hit
       ? this.t('detail.hit', { km: Math.round(dKm) }, `Hit (≈${Math.round(dKm)} km)`)
       : this.t('detail.miss', { km: Math.round(dKm), correct: expected }, `Miss (≈${Math.round(dKm)} km) • Correct: ${expected}`);
-    this.history.add({ ok: hit, title, detail, airport: this.current });
+    this.history.add({ok:hit, title, detail});
 
     // auto-next
     setTimeout(()=>{

@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, pick, shuffleInPlace, buildChoices, speak, showPopup, setQuestion, setQuestionText, filterClueOptions } from './utils.js';
+import { gradeAnswer, pickMixedType, renderQuestion, formatPoints, pick, shuffleInPlace, buildChoices, speak, showPopup } from './utils.js';
 
 export class Rapid {
   constructor(stats, history, leaderboard, ctx){
@@ -16,9 +16,10 @@ export class Rapid {
     this.deadline = null;
     this.maxQ = Infinity;
     this.asked = 0;
-    this.correct = 0;
+    this.points = 0;
     this.wrong = 0;
     this.current = null;
+    this.currentClue = null;
     this.expectedType = null;
     this.baseCtx = null;
 
@@ -70,7 +71,7 @@ export class Rapid {
 
   renderIdle(){
     if(!this.qEl) return;
-    setQuestionText(this.qEl, this.t('rapid.sub.ready', null, 'Pick mode + prompt, press Start'));
+    this.qEl.textContent = this.t('rapid.sub.ready', null, 'Pick mode + prompt, press Start');
     this.subEl.textContent = `${this.pool.length} ${this.t('history.items', null, 'items')}`;
     if(this.okEl) this.okEl.textContent = '0';
     if(this.badEl) this.badEl.textContent = '0';
@@ -85,13 +86,13 @@ export class Rapid {
 
   startRun(){
     if(!this.pool.length){
-      setQuestionText(this.qEl, this.t('status.no_airports', null, 'No airports in this dataset.'));
+      this.qEl.textContent = this.t('status.no_airports', null, 'No airports in this dataset.');
       return;
     }
 
     this.running = true;
     this.asked = 0;
-    this.correct = 0;
+    this.points = 0;
     this.wrong = 0;
 
     const mode = this.modeSel?.value || 'sprint60';
@@ -119,12 +120,13 @@ export class Rapid {
       this.startBtn.classList.remove('danger');
     }
 
-    const score = this.correct*10 - this.wrong*2;
-    this.subEl.textContent = this.t('rapid.run_finished', { score }, `Run finished. Score=${score}. Use Scoreboard → Submit last run.`);
+    const score = (this.points*10) - (this.wrong*2);
+    const pts = formatPoints(this.points);
+    this.subEl.textContent = this.t('rapid.run_finished', { score }, `Run finished. Score=${score}. Use Scoreboard → Submit last run.`) + ` (${pts} pts)`;
     this.leaderboard?.setLastRun?.({
       mode: this.modeSel?.value||'rapid',
       score,
-      correct: this.correct,
+      correct: this.points,
       wrong: this.wrong,
       timestamp: Date.now()
     });
@@ -134,11 +136,11 @@ export class Rapid {
     const title = this.t('popup.run_end.title', null, 'Vége a játéknak');
     const msg = this.t('popup.run_end.msg', {
       mode,
-      correct: this.correct,
+      correct: this.points,
       wrong: this.wrong,
       asked: this.asked,
       score
-    }, `Mód: ${mode}\nKérdések: ${this.asked}\nHelyes: ${this.correct}\nHibás: ${this.wrong}\nPont: ${score}`);
+    }, `Mód: ${mode}\nKérdések: ${this.asked}\nPontok: ${formatPoints(this.points)}\nHibás: ${this.wrong}\nPont: ${score}`);
     showPopup({
       title,
       message: msg,
@@ -158,11 +160,10 @@ export class Rapid {
   }
 
   pickExpectedType(){
-    const raw = this.promptSel?.value || 'mixed';
-    const m = (raw==='icao'||raw==='iata'||raw==='city'||raw==='mixed') ? raw : 'mixed';
-    if(m!=='mixed') return m;
+    const m = this.promptSel?.value || 'mixed';
+    if(m!=='mixed') return (m==='name') ? 'mixed' : m;
     const opts = ['icao','iata','city'].filter(t=> this.getExpectedAnswer(this.current||{}, t));
-    return pick(opts.length?opts:['icao']);
+    return pickMixedType(opts.length?opts:['icao']);
   }
 
   badge(){
@@ -173,20 +174,14 @@ export class Rapid {
     return this.t('label.answer', null, 'ANSWER');
   }
 
-  clueLabel(a){
+  pickClue(a){
+    const exp = (this.expectedType||'').toLowerCase();
     const opts=[];
-    if(this.expectedType!=='icao' && a.icao) opts.push({ type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` });
-    if(this.expectedType!=='iata' && a.iata) opts.push({ type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` });
-    if(this.expectedType!=='city' && a.city) opts.push({ type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` });
-    if(opts.length){
-      const expected = this.getExpectedAnswer(a, this.expectedType);
-      const safe = filterClueOptions(opts, expected, this.expectedType);
-      return pick(safe.length ? safe : opts);
-    }
-    if(a.city) return { type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` };
-    if(a.iata) return { type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` };
-    if(a.icao) return { type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` };
-    return { type:'other', text:'—' };
+    if(exp !== 'icao' && a.icao) opts.push({ type:'icao', label:this.t('clue.icao', null, 'ICAO'), value:a.icao });
+    if(exp !== 'iata' && a.iata) opts.push({ type:'iata', label:this.t('clue.iata', null, 'IATA'), value:a.iata });
+    // CITY as clue only when expected is a code. If expected is CITY, clues are codes only.
+    if((exp === 'icao' || exp === 'iata') && a.city) opts.push({ type:'city', label:this.t('clue.city', null, 'CITY'), value:a.city });
+    return opts.length ? pick(opts) : { type:'icao', label:this.t('clue.icao', null, 'ICAO'), value:(a.icao||'—') };
   }
 
   getExpectedAnswer(a, t){
@@ -202,9 +197,15 @@ export class Rapid {
     this.current = (this.ctx?.pickAirport) ? this.ctx.pickAirport(this.pool) : pick(this.pool);
     this.expectedType = this.pickExpectedType();
 
-    const clue = this.clueLabel(this.current);
+    const clue = this.pickClue(this.current);
     this.currentClue = clue;
-    setQuestion(this.qEl, clue.text, this.expectedType, this.badge(), clue.type);
+    renderQuestion(this.qEl, {
+      clueType: clue.type,
+      clueLabel: clue.label,
+      clueValue: clue.value,
+      expectedType: this.expectedType,
+      expectedLabel: this.badge()
+    });
 
     if(resetSub){
       const baseHint = this.baseCtx
@@ -215,7 +216,7 @@ export class Rapid {
 
     if(this.voiceEl?.checked){
       // Read only the clue value; codes are OK with any voice.
-      const spoken = clue.replace(/^\w+\s*:\s*/, '');
+      const spoken = (this.qEl?.dataset?.clueValue||'').toString() || (clue.value||'');
       speak(spoken, { lang: this.voiceLang(), rate: 1 });
     }
 
@@ -263,15 +264,17 @@ export class Rapid {
 
     const user = this.inputEl.value;
     const expected = this.getExpectedAnswer(this.current, this.expectedType);
-    const ok = eqAnswer(user, expected);
+    const g = gradeAnswer(user, expected, this.expectedType, this.current);
+    const ok = g.ok;
+    const partial = g.partial;
 
     this.stats.record(ok);
     progress.record(this.ctx?.currentPack?.id, ok);
 
     this.asked += 1;
-    if(ok) this.correct += 1; else this.wrong += 1;
+    if(ok) this.points += (g.credit||0); else this.wrong += 1;
 
-    if(this.okEl) this.okEl.textContent = String(this.correct);
+    if(this.okEl) this.okEl.textContent = formatPoints(this.points);
     if(this.badEl) this.badEl.textContent = String(this.wrong);
 
     if(!ok){
@@ -280,11 +283,14 @@ export class Rapid {
       if(kind) perf.recordConfusion(storage, kind, expected, user);
     }
 
-    const title = `${this.badge()} | ${(this.currentClue?.text)||this.clueLabel(this.current).text}`;
+    const clue = this.currentClue || this.pickClue(this.current);
+    const title = `${this.badge()} | ${clue.label}: ${clue.value}`;
     const detail = ok
-      ? this.t('detail.ok', { expected }, `OK: ${expected}`)
+      ? (partial
+          ? this.t('detail.partial', { user: (user||'—'), expected }, `Partial (½): ${user||'—'} • Correct: ${expected}`)
+          : this.t('detail.ok', { expected }, `OK: ${expected}`))
       : this.t('detail.wrong', { user: (user||'—'), expected }, `Your: ${user||'—'} • Correct: ${expected}`);
-    this.history.add({ ok, title, detail, airport: this.current });
+    this.history.add({ok, title, detail});
 
     this.tick();
     if(this.running) this.nextQuestion();

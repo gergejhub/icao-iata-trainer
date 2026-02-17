@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, pick, shuffleInPlace, speak, setQuestion, setQuestionText } from './utils.js';
+import { gradeAnswer, pickMixedType, renderQuestion, pick, shuffleInPlace, speak } from './utils.js';
 
 // Simple SRS using SM-2-like intervals.
 // Stores per-airport card state in localStorage.
@@ -27,6 +27,7 @@ export class SRS {
     this.pool = [];
     this.due = [];
     this.current = null;
+    this.currentClue = null;
     this.expectedType = 'mixed';
     this.awaitReveal = false;
     this.baseCtx = null;
@@ -77,7 +78,7 @@ export class SRS {
 
   start(){
     if(!this.pool.length){
-      setQuestionText(this.qEl, '—');
+      this.qEl.textContent = '—';
       this.subEl.textContent = this.t('srs.sub.no_airports', null, 'No airports in dataset.');
       return;
     }
@@ -91,9 +92,9 @@ export class SRS {
 
   pickExpectedType(a){
     const m = this.expectedType || 'mixed';
-    if(m!=='mixed') return m;
-    const opts = ['icao','iata','city'].filter(t=> (a?.[t]||'').toString().trim().length);
-    return pick(opts.length?opts:['icao']);
+    if(m!=='mixed') return (m==='name') ? 'mixed' : m;
+    const opts = ['icao','iata','city'].filter(t=> (this.expectedAnswer(a, t)||'').toString().trim().length);
+    return pickMixedType(opts.length?opts:['icao']);
   }
 
   pickDue(){
@@ -115,17 +116,14 @@ export class SRS {
     return this.t('label.answer', null, 'ANSWER');
   }
 
-  clueFor(a, expectedType){
-    const options = [];
-    if(expectedType!=='icao' && a.icao) options.push({ type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` });
-    if(expectedType!=='iata' && a.iata) options.push({ type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` });
-    if(expectedType!=='city' && a.city) options.push({ type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` });
-
-    if(options.length) return pick(options);
-    if(a.city) return { type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` };
-    if(a.iata) return { type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` };
-    if(a.icao) return { type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` };
-    return { type:'other', text:'—' };
+  pickClue(a, expectedType){
+    const exp = (expectedType||'').toLowerCase();
+    const opts=[];
+    if(exp !== 'icao' && a.icao) opts.push({ type:'icao', label:this.t('clue.icao', null, 'ICAO'), value:a.icao });
+    if(exp !== 'iata' && a.iata) opts.push({ type:'iata', label:this.t('clue.iata', null, 'IATA'), value:a.iata });
+    // CITY as clue only when expected is a code. If expected is CITY, clues are codes only.
+    if((exp === 'icao' || exp === 'iata') && a.city) opts.push({ type:'city', label:this.t('clue.city', null, 'CITY'), value:a.city });
+    return opts.length ? pick(opts) : { type:'icao', label:this.t('clue.icao', null, 'ICAO'), value:(a.icao||'—') };
   }
 
   expectedAnswer(a, t){
@@ -144,9 +142,15 @@ export class SRS {
     const expType = this.pickExpectedType(this.current);
     this.current._expectedType = expType;
 
-    const clue = this.clueFor(this.current, expType);
+    const clue = this.pickClue(this.current, expType);
     this.currentClue = clue;
-    setQuestion(this.qEl, clue.text, expType, this.labelFor(expType), clue.type);
+    renderQuestion(this.qEl, {
+      clueType: clue.type,
+      clueLabel: clue.label,
+      clueValue: clue.value,
+      expectedType: expType,
+      expectedLabel: this.labelFor(expType)
+    });
 
     const baseHint = (this.ctx?.proMode && this.baseCtx)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
@@ -166,7 +170,9 @@ export class SRS {
     const expType = this.current._expectedType || 'icao';
     const expected = this.expectedAnswer(this.current, expType);
     const user = this.inputEl.value;
-    const ok = eqAnswer(user, expected);
+    const g = gradeAnswer(user, expected, expType, this.current);
+    const ok = g.ok;
+    const partial = g.partial;
 
     // record for stats & analytics (does not grade SRS yet)
     this.stats.record(ok);
@@ -177,11 +183,14 @@ export class SRS {
       if(kind) perf.recordConfusion(storage, kind, expected, user);
     }
 
-    const title = `${this.labelFor(expType)} | ${(this.currentClue?.text)||this.clueFor(this.current, expType).text}`;
+    const clue = this.currentClue || this.pickClue(this.current, expType);
+    const title = `${this.labelFor(expType)} | ${clue.label}: ${clue.value}`;
     const detail = ok
-      ? this.t('detail.ok', { expected }, `OK: ${expected}`)
+      ? (partial
+          ? this.t('detail.partial', { user: user||'—', expected }, `Partial (½): ${user||'—'} • Correct: ${expected}`)
+          : this.t('detail.ok', { expected }, `OK: ${expected}`))
       : this.t('detail.wrong', { user: user||'—', expected }, `Your: ${user||'—'} • Correct: ${expected}`);
-    this.history.add({ ok, title, detail, airport: this.current });
+    this.history.add({ ok, title, detail });
 
     this.awaitReveal = true;
     this.gradeRow.style.display='flex';

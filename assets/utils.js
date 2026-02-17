@@ -2,6 +2,7 @@ export function normalize(s){
   if(s===null||s===undefined) return '';
   return String(s)
     .normalize('NFD')
+    // Strip combining diacritics (broader browser support than Unicode property escapes)
     .replace(/[\u0300-\u036f]+/g,'')
     .replace(/[^a-zA-Z0-9 ]+/g,' ')
     .replace(/\s+/g,' ')
@@ -18,71 +19,223 @@ export function eqAnswer(user, expected){
   return a.length>0 && a===b;
 }
 
+// ------------------------------------------------------------
+// Mixed-mode weighting (ICAO/IATA dominant; CITY still present)
+// ------------------------------------------------------------
+const MIXED_WEIGHTS = { icao: 0.45, iata: 0.45, city: 0.10 };
 
-// Clue anti-leak filter: avoid clues that contain the expected answer (common with airport names containing the city).
-// Returns the filtered list when possible; falls back to original options if everything would be filtered.
-export function filterClueOptions(options, expected, expectedType){
-  const opts = Array.isArray(options) ? options : [];
-  const et = (expectedType||'').toString().trim().toLowerCase();
-  const exp = normalize(expected||'');
-  // Only apply to CITY and to longer strings (avoid over-filtering short codes).
-  if(et!=='city' || exp.length<3) return opts;
+export function pickMixedType(availableTypes){
+  const types = (availableTypes||[]).filter(t=> t in MIXED_WEIGHTS);
+  if(!types.length) return 'icao';
+  // renormalize weights to only available types
+  let sum = 0;
+  for(const t of types) sum += MIXED_WEIGHTS[t] || 0;
+  if(sum <= 0) return pick(types);
+  let r = Math.random() * sum;
+  for(const t of types){
+    r -= (MIXED_WEIGHTS[t] || 0);
+    if(r <= 0) return t;
+  }
+  return types[types.length-1];
+}
 
-  const expTokens = exp.split(/\s+/).filter(t=>t.length>=3);
+// ------------------------------------------------------------
+// Question rendering with category highlight chips
+// ------------------------------------------------------------
+export function renderQuestion(el, { clueType, clueLabel, clueValue, expectedType, expectedLabel } = {}){
+  if(!el) return;
+  // clear
+  while(el.firstChild) el.removeChild(el.firstChild);
 
-  const filtered = opts.filter(o=>{
-    const type = (o?.type||'').toString().trim().toLowerCase();
-    // Defensive: only allow our supported clue types.
-    if(type && type!=='icao' && type!=='iata' && type!=='city') return false;
+  const wrap = document.createElement('div');
+  wrap.className = `qwrap q-exp-${(expectedType||'').toLowerCase()}`;
 
-    const raw = (o?.text??'').toString();
-    // Prefer value part after ":" (e.g., "IATA: CTA" -> "CTA")
-    const i = raw.indexOf(':');
-    const val = (i>=0 ? raw.slice(i+1) : raw).trim();
-    const v = normalize(val);
+  const accent = document.createElement('span');
+  accent.className = `qaccent q-${(expectedType||'').toLowerCase()}`;
 
-    if(!v) return true;
-    // Direct containment (handles diacritics via normalize)
-    if(v.includes(exp)) return false;
-    // Token containment for multi-word cities (e.g. "rio de janeiro")
-    for(const t of expTokens){
-      if(t && v.includes(t)) return false;
+  const clue = document.createElement('span');
+  clue.className = 'qclue';
+
+  const chip = document.createElement('span');
+  chip.className = `qchip q-${(clueType||'').toLowerCase()} qchip-clue`;
+  chip.textContent = (clueLabel||'').toString();
+
+  const val = document.createElement('span');
+  val.className = 'qval';
+  val.textContent = (clueValue||'—').toString();
+
+  clue.appendChild(chip);
+  clue.appendChild(document.createTextNode(' '));
+  clue.appendChild(val);
+
+  const arrow = document.createElement('span');
+  arrow.className = 'qarrow';
+  arrow.textContent = ' → ';
+
+  const exp = document.createElement('span');
+  exp.className = `qchip q-${(expectedType||'').toLowerCase()} qchip-exp`;
+  exp.textContent = (expectedLabel||'').toString();
+
+  wrap.appendChild(accent);
+  wrap.appendChild(clue);
+  wrap.appendChild(arrow);
+  wrap.appendChild(exp);
+  el.appendChild(wrap);
+
+  // Useful for voice/history
+  try{
+    el.dataset.plain = `${(clueLabel||'').toString()}: ${(clueValue||'').toString()} → ${(expectedLabel||'').toString()}`;
+    el.dataset.clueValue = (clueValue||'').toString();
+  }catch(e){}
+}
+
+// ------------------------------------------------------------
+// CITY grading with partial credit for metro/alias cases
+// ------------------------------------------------------------
+
+// Hand-picked overrides for “marketed as metro” airports.
+// Keys can be IATA or ICAO.
+const CITY_ALIAS_OVERRIDES = {
+  // Milan–Bergamo (BGY/LIME) marketed/associated with Milan & Bergamo
+  BGY: ['Bergamo', 'Milan', 'Milano'],
+  LIME: ['Bergamo', 'Milan', 'Milano'],
+  // Stockholm Skavsta (NYO/ESKN) often answered as Stockholm / Skavsta
+  NYO: ['Stockholm', 'Skavsta'],
+  ESKN: ['Stockholm', 'Skavsta'],
+  // London Luton (LTN/EGGW) often answered as London
+  LTN: ['London'],
+  EGGW: ['London']
+};
+
+const CITY_STOPWORDS = new Set([
+  'airport','international','intl','aeropuerto','aeroporto','aeroport','aéroport','flughafen',
+  'airfield','field','aerodrome','aerodrom','terminal','regional','municipal','county',
+  'saint','st','santa','san','de','del','la','le','el','di','da','do','dos','das','of','the'
+]);
+
+export function parseCityParts(cityRaw){
+  const s = String(cityRaw||'').trim();
+  if(!s) return { primary: '', aliases: [] };
+
+  // Primary: before parentheses if present
+  const pm = s.match(/^(.+?)\s*\((.+)\)\s*$/);
+  let primary = s;
+  let inner = '';
+  if(pm){
+    primary = (pm[1]||'').trim();
+    inner = (pm[2]||'').trim();
+  }
+
+  // If comma-separated locality/region, treat first as primary.
+  if(!pm && primary.includes(',')){
+    const parts = primary.split(',').map(x=>x.trim()).filter(Boolean);
+    if(parts.length){
+      primary = parts[0];
+      inner = parts.slice(1).join(', ');
     }
-    return true;
-  });
+  }
 
-  return filtered.length ? filtered : opts;
+  const aliases = [];
+  if(inner){
+    // Split aliases by common separators
+    inner.split(/\s*[,;/]\s*|\s+\/\s+|\s+\+\s+/g)
+      .map(x=>x.trim())
+      .filter(Boolean)
+      .forEach(x=> aliases.push(x));
+  }
+
+  return { primary, aliases };
 }
 
-// Special matcher for AIRPORT NAME questions: allow typing just the city name.
-// - case-insensitive
-// - accent-insensitive
-// - accepts:
-//   1) exact airport name
-//   2) exact city name
-//   3) (optional) partial airport name match (>=4 chars)
-export function eqAirportNameOrCity(userRaw, airport){
-  const u = normalize(userRaw);
-  if(!u) return false;
-  const name = normalize(airport?.name||'');
-  const city = normalize(airport?.city||'');
-  if(name && u===name) return true;
-  if(city && u===city) return true;
+function aliasesFromAirportName(airport, primaryCity){
+  const name = String(airport?.name||'').trim();
+  if(!name) return [];
+  const primaryNorm = normalize(primaryCity);
+  const primaryTokens = new Set(primaryNorm ? primaryNorm.split(' ') : []);
 
-  // Allow partial match for convenience when users type a distinctive fragment.
-  // Guard with length to avoid trivial 1-2 letter matches.
-  if(name && u.length>=4 && name.includes(u)) return true;
-  if(city && u.length>=3 && city.includes(u)) return true;
-
-  return false;
+  const tokens = normalize(name).split(' ').filter(Boolean);
+  const out = [];
+  for(const t of tokens){
+    if(t.length < 3) continue;
+    if(primaryTokens.has(t)) continue;
+    if(CITY_STOPWORDS.has(t)) continue;
+    out.push(t);
+  }
+  return unique(out);
 }
 
-export function nameMatch(userRaw, nameRaw){
+function overridesForAirport(airport){
+  const out = [];
+  const keys = [String(airport?.iata||'').toUpperCase(), String(airport?.icao||'').toUpperCase()].filter(Boolean);
+  for(const k of keys){
+    const arr = CITY_ALIAS_OVERRIDES[k];
+    if(Array.isArray(arr)) out.push(...arr);
+  }
+  return unique(out);
+}
+
+export function cityAliasesForAirport(airport){
+  const cityRaw = String(airport?.city||'').trim();
+  const parts = parseCityParts(cityRaw);
+  const aliases = [];
+  aliases.push(...(parts.aliases||[]));
+  aliases.push(...aliasesFromAirportName(airport, parts.primary||cityRaw));
+  aliases.push(...overridesForAirport(airport));
+
+  // Remove empties + duplicates (by normalized form)
+  const seen = new Set();
+  const out = [];
+  for(const a of aliases){
+    const n = normalize(a);
+    if(!n) continue;
+    if(seen.has(n)) continue;
+    seen.add(n);
+    out.push(a);
+  }
+  return out;
+}
+
+export function gradeCityAnswer(userRaw, airport){
   const u = normalize(userRaw);
-  const n = normalize(nameRaw);
-  if(!u || !n) return false;
-  if(u.length < 4) return false;
-  return n.includes(u);
+  if(!u) return { credit: 0, matched: null };
+
+  const cityRaw = String(airport?.city||'').trim();
+  const { primary } = parseCityParts(cityRaw);
+  const primaryNorm = normalize(primary||cityRaw);
+
+  // Full credit if user matches the primary city, or clearly contains it.
+  if(primaryNorm){
+    if(u === primaryNorm) return { credit: 1, matched: 'primary' };
+    if(u.length >= 4 && (primaryNorm.startsWith(u) || primaryNorm.includes(u))) return { credit: 1, matched: 'primary_partial' };
+    if(u.length >= 4 && u.includes(primaryNorm)) return { credit: 1, matched: 'primary_included' };
+  }
+
+  // Partial credit for aliases (parentheses, airport-name locality, metro marketing overrides)
+  const aliases = cityAliasesForAirport(airport);
+  for(const a of aliases){
+    const an = normalize(a);
+    if(!an || an === primaryNorm) continue;
+    if(u === an) return { credit: 0.5, matched: a };
+    if(u.length >= 4 && (an.includes(u) || u.includes(an))) return { credit: 0.5, matched: a };
+  }
+
+  return { credit: 0, matched: null };
+}
+
+export function gradeAnswer(userRaw, expectedRaw, expectedType, airport=null){
+  const t = (expectedType||'').toLowerCase();
+  if(t === 'city'){
+    const res = gradeCityAnswer(userRaw, airport||{city: expectedRaw});
+    return { ...res, ok: res.credit > 0, partial: res.credit > 0 && res.credit < 1 };
+  }
+  const ok = eqAnswer(userRaw, expectedRaw);
+  return { credit: ok ? 1 : 0, ok, partial: false, matched: ok ? 'exact' : null };
+}
+
+export function formatPoints(n){
+  const x = Number(n||0);
+  if(!Number.isFinite(x)) return '0';
+  return (Math.round(x*10)%10===0) ? String(Math.round(x)) : x.toFixed(1);
 }
 
 export function prettyAirport(a){
@@ -229,61 +382,4 @@ export function shuffleInPlace(a){
     [a[i],a[j]]=[a[j],a[i]];
   }
   return a;
-}
-
-// Render a question line with a highlighted category chip.
-// Uses DOM construction (no innerHTML) to avoid injection issues.
-// expectedType: 'icao' | 'iata' | 'city' | 'name' | ...
-export function setQuestion(el, clue, expectedType, label, clueType){
-  if(!el) return;
-  // Reset
-  el.textContent = '';
-  const t = (expectedType||'').toString().trim().toLowerCase() || 'other';
-  el.setAttribute('data-qtype', t);
-
-  const ct = (clueType||'').toString().trim().toLowerCase() || 'other';
-
-  // Clue: highlight the clue label (ICAO/IATA/CITY) subtly, without being noisy.
-  const clueWrap = document.createElement('span');
-  clueWrap.className = 'qclue';
-
-  const clueStr = (clue??'').toString();
-  const i = clueStr.indexOf(':');
-  if(i>0){
-    const head = clueStr.slice(0, i).trim();
-    const tail = clueStr.slice(i+1).trim();
-    const clueChip = document.createElement('span');
-    clueChip.className = `qcluechip qcluechip-${ct}`;
-    clueChip.textContent = head || clueStr;
-
-    const clueVal = document.createElement('span');
-    clueVal.className = 'qclueval';
-    clueVal.textContent = tail;
-
-    clueWrap.appendChild(clueChip);
-    clueWrap.appendChild(clueVal);
-  }else{
-    const clueVal = document.createElement('span');
-    clueVal.className = 'qclueval';
-    clueVal.textContent = clueStr;
-    clueWrap.appendChild(clueVal);
-  }
-
-  const arrow = document.createElement('span');
-  arrow.className = 'qarrow';
-  arrow.textContent = ' \u2192 ';
-
-  const chip = document.createElement('span');
-  chip.className = `qchip qchip-${t}`;
-  chip.textContent = (label??'').toString();
-
-  el.appendChild(clueWrap);
-  el.appendChild(arrow);
-  el.appendChild(chip);
-}
-
-export function setQuestionText(el, text){
-  if(!el) return;
-  el.textContent = (text??'').toString();
-  el.removeAttribute('data-qtype');
 }
