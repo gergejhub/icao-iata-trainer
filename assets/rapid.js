@@ -235,6 +235,14 @@ export class Rapid {
       return;
     }
 
+    // MCQ can be toggled on while the mode is still idle (before Start).
+    // Avoid trying to build choices without an active question.
+    if(!this.running || !this.current){
+      this.inputEl.style.display='';
+      this.choicesEl.style.display='none';
+      return;
+    }
+
     this.inputEl.style.display='none';
     this.choicesEl.style.display='grid';
 
