@@ -165,7 +165,7 @@ export class MapQuiz {
     const detail = hit
       ? this.t('detail.hit', { km: Math.round(dKm) }, `Hit (≈${Math.round(dKm)} km)`)
       : this.t('detail.miss', { km: Math.round(dKm), correct: expected }, `Miss (≈${Math.round(dKm)} km) • Correct: ${expected}`);
-    this.history.add({ok:hit, title, detail});
+    this.history.add({ ok: hit, title, detail, airport: this.current });
 
     // auto-next
     setTimeout(()=>{

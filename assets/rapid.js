@@ -283,7 +283,7 @@ export class Rapid {
     const detail = ok
       ? this.t('detail.ok', { expected }, `OK: ${expected}`)
       : this.t('detail.wrong', { user: (user||'—'), expected }, `Your: ${user||'—'} • Correct: ${expected}`);
-    this.history.add({ok, title, detail});
+    this.history.add({ ok, title, detail, airport: this.current });
 
     this.tick();
     if(this.running) this.nextQuestion();

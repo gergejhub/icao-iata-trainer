@@ -61,6 +61,11 @@ const DICT = {
     'ui.mcq': 'MCQ',
     'ui.nickname_ph': 'Nickname (for submit)',
 
+    // Notes / mnemonics
+    'note.btn.add': 'Add note',
+    'note.btn.edit': 'Edit note',
+    'note.prompt': 'Mnemonic / note for {code}{city} (empty = delete):',
+
     // Popups
     'popup.ok': 'OK',
     'popup.run_end.title': 'Game over',
@@ -276,6 +281,11 @@ const DICT = {
     'ui.voice': 'Hang',
     'ui.mcq': 'Feleletválasztós',
     'ui.nickname_ph': 'Becenév (beküldéshez)',
+
+    // Jegyzetek / mnemonikák
+    'note.btn.add': 'Jegyzet',
+    'note.btn.edit': 'Jegyzet szerkesztése',
+    'note.prompt': 'Mnemonika / jegyzet ehhez: {code}{city} (üres = törlés):',
 
     // Popups
     'popup.ok': 'Rendben',

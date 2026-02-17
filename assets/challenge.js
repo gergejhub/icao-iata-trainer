@@ -201,7 +201,7 @@ export class Challenge {
     const title = `${ok?'✅':'❌'} ${this.qEl.textContent}`;
     const detail = ok ? this.t('detail.ok', {expected}, `OK: ${expected}`)
                       : this.t('detail.wrong', {user: choice||'—', expected}, `Your: ${choice||'—'} • Correct: ${expected}`);
-    this.history.add({ok, title, detail});
+    this.history.add({ ok, title, detail, airport: this.current });
 
     // next
     this.next();

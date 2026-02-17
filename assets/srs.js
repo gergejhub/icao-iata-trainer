@@ -179,7 +179,7 @@ export class SRS {
     const detail = ok
       ? this.t('detail.ok', { expected }, `OK: ${expected}`)
       : this.t('detail.wrong', { user: user||'—', expected }, `Your: ${user||'—'} • Correct: ${expected}`);
-    this.history.add({ ok, title, detail });
+    this.history.add({ ok, title, detail, airport: this.current });
 
     this.awaitReveal = true;
     this.gradeRow.style.display='flex';

@@ -2,7 +2,7 @@ export function normalize(s){
   if(s===null||s===undefined) return '';
   return String(s)
     .normalize('NFD')
-    .replace(/\p{Diacritic}+/gu,'')
+    .replace(/[\u0300-\u036f]+/g,'')
     .replace(/[^a-zA-Z0-9 ]+/g,' ')
     .replace(/\s+/g,' ')
     .trim()
@@ -32,9 +32,12 @@ export function eqAirportNameOrCity(userRaw, airport){
   const city = normalize(airport?.city||'');
   if(name && u===name) return true;
   if(city && u===city) return true;
+
   // Allow partial match for convenience when users type a distinctive fragment.
   // Guard with length to avoid trivial 1-2 letter matches.
   if(name && u.length>=4 && name.includes(u)) return true;
+  if(city && u.length>=3 && city.includes(u)) return true;
+
   return false;
 }
 
