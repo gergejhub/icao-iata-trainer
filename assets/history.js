@@ -22,15 +22,24 @@ export class History {
     return fallback || key;
   }
 
-  setMode(mode){
+  modeLabel(){
+    const m = (this.mode||'').toUpperCase();
+    if(!m || m==='—') return '—';
+    const key = `history.mode.${m.toLowerCase()}`;
+    const out = this.t(key, null, null);
+    return (out && out !== key) ? out : m;
+  }
+
+  startRun(mode){
     this.mode = mode || '';
-    this.renderMeta();
+    this.items = [];
+    this.render();
   }
 
   renderMeta(){
     if(!this.metaEl) return;
-    const n = this.items.length;
-    this.metaEl.textContent = this.mode ? `${this.mode} • ${n}` : `${n}`;
+    const itemsLabel = this.t('history.items', null, 'items');
+    this.metaEl.textContent = `${this.modeLabel()} • ${this.items.length} ${itemsLabel}`;
   }
 
   clear(){
@@ -80,7 +89,7 @@ export class History {
     this.renderMeta();
     if(!this.listEl) return;
     if(!this.items.length){
-      this.listEl.innerHTML = `<div class="smallmuted">${escapeHtml(this.t('history.empty', null, 'No history yet.'))}</div>`;
+      this.listEl.innerHTML = `<div class="smallmuted">${escapeHtml(this.t('history.empty', null, 'No answers yet.'))}</div>`;
       return;
     }
 
