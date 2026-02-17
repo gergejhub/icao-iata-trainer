@@ -198,16 +198,40 @@ export function shuffleInPlace(a){
 // Render a question line with a highlighted category chip.
 // Uses DOM construction (no innerHTML) to avoid injection issues.
 // expectedType: 'icao' | 'iata' | 'city' | 'name' | ...
-export function setQuestion(el, clue, expectedType, label){
+export function setQuestion(el, clue, expectedType, label, clueType){
   if(!el) return;
   // Reset
   el.textContent = '';
   const t = (expectedType||'').toString().trim().toLowerCase() || 'other';
   el.setAttribute('data-qtype', t);
 
-  const clueSpan = document.createElement('span');
-  clueSpan.className = 'qclue';
-  clueSpan.textContent = (clue??'').toString();
+  const ct = (clueType||'').toString().trim().toLowerCase() || 'other';
+
+  // Clue: highlight the clue label (ICAO/IATA/CITY) subtly, without being noisy.
+  const clueWrap = document.createElement('span');
+  clueWrap.className = 'qclue';
+
+  const clueStr = (clue??'').toString();
+  const i = clueStr.indexOf(':');
+  if(i>0){
+    const head = clueStr.slice(0, i).trim();
+    const tail = clueStr.slice(i+1).trim();
+    const clueChip = document.createElement('span');
+    clueChip.className = `qcluechip qcluechip-${ct}`;
+    clueChip.textContent = head || clueStr;
+
+    const clueVal = document.createElement('span');
+    clueVal.className = 'qclueval';
+    clueVal.textContent = tail;
+
+    clueWrap.appendChild(clueChip);
+    clueWrap.appendChild(clueVal);
+  }else{
+    const clueVal = document.createElement('span');
+    clueVal.className = 'qclueval';
+    clueVal.textContent = clueStr;
+    clueWrap.appendChild(clueVal);
+  }
 
   const arrow = document.createElement('span');
   arrow.className = 'qarrow';
@@ -217,7 +241,7 @@ export function setQuestion(el, clue, expectedType, label){
   chip.className = `qchip qchip-${t}`;
   chip.textContent = (label??'').toString();
 
-  el.appendChild(clueSpan);
+  el.appendChild(clueWrap);
   el.appendChild(arrow);
   el.appendChild(chip);
 }

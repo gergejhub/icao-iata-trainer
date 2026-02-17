@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak, showPopup, setQuestion, setQuestionText } from './utils.js';
+import { eqAnswer, pick, shuffleInPlace, buildChoices, speak, showPopup, setQuestion, setQuestionText } from './utils.js';
 
 export class Rapid {
   constructor(stats, history, leaderboard, ctx){
@@ -158,9 +158,10 @@ export class Rapid {
   }
 
   pickExpectedType(){
-    const m = this.promptSel?.value || 'mixed';
+    const raw = this.promptSel?.value || 'mixed';
+    const m = (raw==='icao'||raw==='iata'||raw==='city'||raw==='mixed') ? raw : 'mixed';
     if(m!=='mixed') return m;
-    const opts = ['icao','iata','city','name'].filter(t=> this.getExpectedAnswer(this.current||{}, t));
+    const opts = ['icao','iata','city'].filter(t=> this.getExpectedAnswer(this.current||{}, t));
     return pick(opts.length?opts:['icao']);
   }
 
@@ -169,28 +170,25 @@ export class Rapid {
     if(t==='icao') return this.t('label.icao_code', null, 'ICAO CODE');
     if(t==='iata') return this.t('label.iata_code', null, 'IATA CODE');
     if(t==='city') return this.t('label.city', null, 'CITY');
-    if(t==='name') return this.t('label.airport_name', null, 'AIRPORT NAME');
     return this.t('label.answer', null, 'ANSWER');
   }
 
   clueLabel(a){
     const opts=[];
-    if(this.expectedType!=='icao' && a.icao) opts.push(`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}`);
-    if(this.expectedType!=='iata' && a.iata) opts.push(`${this.t('clue.iata', null, 'IATA')}: ${a.iata}`);
-    if(this.expectedType!=='city' && a.city) opts.push(`${this.t('clue.city', null, 'CITY')}: ${a.city}`);
-    if(this.expectedType!=='name' && a.name) opts.push(`${this.t('clue.name', null, 'NAME')}: ${a.name}`);
+    if(this.expectedType!=='icao' && a.icao) opts.push({ type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` });
+    if(this.expectedType!=='iata' && a.iata) opts.push({ type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` });
+    if(this.expectedType!=='city' && a.city) opts.push({ type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` });
     if(opts.length) return pick(opts);
-    if(a.name) return `${this.t('clue.name', null, 'NAME')}: ${a.name}`;
-    if(a.city) return `${this.t('clue.city', null, 'CITY')}: ${a.city}`;
-    if(a.iata) return `${this.t('clue.iata', null, 'IATA')}: ${a.iata}`;
-    return `${this.t('clue.icao', null, 'ICAO')}: ${a.icao||'—'}`;
+    if(a.city) return { type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` };
+    if(a.iata) return { type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` };
+    if(a.icao) return { type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` };
+    return { type:'other', text:'—' };
   }
 
   getExpectedAnswer(a, t){
     if(t==='icao') return a.icao||'';
     if(t==='iata') return a.iata||'';
     if(t==='city') return a.city||'';
-    if(t==='name') return a.name||'';
     return '';
   }
 
@@ -201,7 +199,8 @@ export class Rapid {
     this.expectedType = this.pickExpectedType();
 
     const clue = this.clueLabel(this.current);
-    setQuestion(this.qEl, clue, this.expectedType, this.badge());
+    this.currentClue = clue;
+    setQuestion(this.qEl, clue.text, this.expectedType, this.badge(), clue.type);
 
     if(resetSub){
       const baseHint = this.baseCtx
@@ -260,9 +259,7 @@ export class Rapid {
 
     const user = this.inputEl.value;
     const expected = this.getExpectedAnswer(this.current, this.expectedType);
-    const ok = (this.expectedType==='name')
-      ? eqAirportNameOrCity(user, this.current)
-      : eqAnswer(user, expected);
+    const ok = eqAnswer(user, expected);
 
     this.stats.record(ok);
     progress.record(this.ctx?.currentPack?.id, ok);
@@ -279,7 +276,7 @@ export class Rapid {
       if(kind) perf.recordConfusion(storage, kind, expected, user);
     }
 
-    const title = `${this.badge()} | ${this.clueLabel(this.current)}`;
+    const title = `${this.badge()} | ${(this.currentClue?.text)||this.clueLabel(this.current).text}`;
     const detail = ok
       ? this.t('detail.ok', { expected }, `OK: ${expected}`)
       : this.t('detail.wrong', { user: (user||'—'), expected }, `Your: ${user||'—'} • Correct: ${expected}`);

@@ -76,13 +76,11 @@ const DICT = {
     'label.icao_code': 'ICAO CODE',
     'label.iata_code': 'IATA CODE',
     'label.city': 'CITY',
-    'label.airport_name': 'AIRPORT NAME',
     'label.answer': 'ANSWER',
 
     'clue.icao': 'ICAO',
     'clue.iata': 'IATA',
     'clue.city': 'CITY',
-    'clue.name': 'NAME',
 
     // Badges / hints
     'badge.enter_next': 'Enter: check • Enter: next',
@@ -173,7 +171,6 @@ const DICT = {
     'prompt.icao': 'ICAO CODE',
     'prompt.iata': 'IATA CODE',
     'prompt.city': 'CITY',
-    'prompt.name': 'AIRPORT NAME',
     'rapid.mode.sprint60': 'Sprint 60s',
     'rapid.mode.sprint30': 'Sprint 30s',
     'rapid.mode.set30': 'Set of 30',
@@ -297,13 +294,11 @@ const DICT = {
     'label.icao_code': 'ICAO KÓD',
     'label.iata_code': 'IATA KÓD',
     'label.city': 'VÁROS',
-    'label.airport_name': 'REPÜLŐTÉR NÉV',
     'label.answer': 'VÁLASZ',
 
     'clue.icao': 'ICAO',
     'clue.iata': 'IATA',
     'clue.city': 'VÁROS',
-    'clue.name': 'NÉV',
 
     // Badges / hints
     'badge.enter_next': 'Enter: ellenőrzés • Enter: következő',
@@ -394,7 +389,6 @@ const DICT = {
     'prompt.icao': 'ICAO KÓD',
     'prompt.iata': 'IATA KÓD',
     'prompt.city': 'VÁROS',
-    'prompt.name': 'REPÜLŐTÉR NÉV',
     'rapid.mode.sprint60': 'Sprint 60 mp',
     'rapid.mode.sprint30': 'Sprint 30 mp',
     'rapid.mode.set30': '30-as szett',

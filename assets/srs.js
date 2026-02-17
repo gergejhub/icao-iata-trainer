@@ -92,7 +92,7 @@ export class SRS {
   pickExpectedType(a){
     const m = this.expectedType || 'mixed';
     if(m!=='mixed') return m;
-    const opts = ['icao','iata','city','name'].filter(t=> (a?.[t]||'').toString().trim().length);
+    const opts = ['icao','iata','city'].filter(t=> (a?.[t]||'').toString().trim().length);
     return pick(opts.length?opts:['icao']);
   }
 
@@ -112,25 +112,26 @@ export class SRS {
     if(t==='icao') return this.t('label.icao_code', null, 'ICAO CODE');
     if(t==='iata') return this.t('label.iata_code', null, 'IATA CODE');
     if(t==='city') return this.t('label.city', null, 'CITY');
-    if(t==='name') return this.t('label.airport_name', null, 'AIRPORT NAME');
     return this.t('label.answer', null, 'ANSWER');
   }
 
   clueFor(a, expectedType){
     const options = [];
-    if(expectedType!=='icao' && a.icao) options.push({k:'clue.icao', v:`${a.icao}`});
-    if(expectedType!=='iata' && a.iata) options.push({k:'clue.iata', v:`${a.iata}`});
-    if(expectedType!=='city' && a.city) options.push({k:'clue.city', v:`${a.city}`});
-    if(expectedType!=='name' && a.name) options.push({k:'clue.name', v:`${a.name}`});
-    const chosen = options.length ? pick(options) : {k:'clue.icao', v:(a.icao||'—')};
-    return `${this.t(chosen.k, null, chosen.k.split('.').pop().toUpperCase())}: ${chosen.v}`;
+    if(expectedType!=='icao' && a.icao) options.push({ type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` });
+    if(expectedType!=='iata' && a.iata) options.push({ type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` });
+    if(expectedType!=='city' && a.city) options.push({ type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` });
+
+    if(options.length) return pick(options);
+    if(a.city) return { type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` };
+    if(a.iata) return { type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` };
+    if(a.icao) return { type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` };
+    return { type:'other', text:'—' };
   }
 
   expectedAnswer(a, t){
     if(t==='icao') return a.icao||'';
     if(t==='iata') return a.iata||'';
     if(t==='city') return a.city||'';
-    if(t==='name') return a.name||'';
     return '';
   }
 
@@ -144,7 +145,8 @@ export class SRS {
     this.current._expectedType = expType;
 
     const clue = this.clueFor(this.current, expType);
-    setQuestion(this.qEl, clue, expType, this.labelFor(expType));
+    this.currentClue = clue;
+    setQuestion(this.qEl, clue.text, expType, this.labelFor(expType), clue.type);
 
     const baseHint = (this.ctx?.proMode && this.baseCtx)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
@@ -175,7 +177,7 @@ export class SRS {
       if(kind) perf.recordConfusion(storage, kind, expected, user);
     }
 
-    const title = `${this.labelFor(expType)} | ${this.clueFor(this.current, expType)}`;
+    const title = `${this.labelFor(expType)} | ${(this.currentClue?.text)||this.clueFor(this.current, expType).text}`;
     const detail = ok
       ? this.t('detail.ok', { expected }, `OK: ${expected}`)
       : this.t('detail.wrong', { user: user||'—', expected }, `Your: ${user||'—'} • Correct: ${expected}`);

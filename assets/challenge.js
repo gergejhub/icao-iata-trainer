@@ -111,7 +111,7 @@ export class Challenge {
   }
 
   pickExpectedType(){
-    const opts = ['icao','iata','city','name'];
+    const opts = ['icao','iata','city'];
     // Always mixed in challenge
     return pick(opts);
   }
@@ -120,24 +120,25 @@ export class Challenge {
     if(t==='icao') return this.t('label.icao_code', null, 'ICAO CODE');
     if(t==='iata') return this.t('label.iata_code', null, 'IATA CODE');
     if(t==='city') return this.t('label.city', null, 'CITY');
-    if(t==='name') return this.t('label.airport_name', null, 'AIRPORT NAME');
     return this.t('label.answer', null, 'ANSWER');
   }
 
   clueLabel(a, expectedType){
     const options = [];
-    if(expectedType!=='icao' && a.icao) options.push(`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}`);
-    if(expectedType!=='iata' && a.iata) options.push(`${this.t('clue.iata', null, 'IATA')}: ${a.iata}`);
-    if(expectedType!=='city' && a.city) options.push(`${this.t('clue.city', null, 'CITY')}: ${a.city}`);
-    if(expectedType!=='name' && a.name) options.push(`${this.t('clue.name', null, 'NAME')}: ${a.name}`);
-    return options.length ? pick(options) : `${this.t('clue.icao', null, 'ICAO')}: ${a.icao||'—'}`;
+    if(expectedType!=='icao' && a.icao) options.push({ type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` });
+    if(expectedType!=='iata' && a.iata) options.push({ type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` });
+    if(expectedType!=='city' && a.city) options.push({ type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` });
+    if(options.length) return pick(options);
+    if(a.city) return { type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` };
+    if(a.iata) return { type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` };
+    if(a.icao) return { type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` };
+    return { type:'other', text:'—' };
   }
 
   answerFor(a, t){
     if(t==='icao') return a.icao||'';
     if(t==='iata') return a.iata||'';
     if(t==='city') return a.city||'';
-    if(t==='name') return a.name||'';
     return '';
   }
 
@@ -149,8 +150,9 @@ export class Challenge {
     this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
 
     const clue = this.clueLabel(ap, this.expectedType);
+    this.currentClue = clue;
     const badge = this.badge(this.expectedType);
-    setQuestion(this.qEl, clue, this.expectedType, badge);
+    setQuestion(this.qEl, clue.text, this.expectedType, badge, clue.type);
 
     const hint = (this.ctx?.proMode && this.baseCtx)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)

@@ -28,7 +28,7 @@ export class MapQuiz {
     this.prompt = 'mixed';
 
     this.modeSel?.addEventListener('change', ()=> this.mode=this.modeSel.value);
-    this.promptSel?.addEventListener('change', ()=> this.prompt=this.promptSel.value);
+    this.promptSel?.addEventListener('change', ()=> { const v=this.promptSel.value; this.prompt = (v==='icao'||v==='iata'||v==='city'||v==='mixed')?v:'mixed'; });
     this.startBtn?.addEventListener('click', ()=> this.startRun());
 
     this.running = false;
@@ -87,9 +87,10 @@ export class MapQuiz {
   }
 
   pickExpectedType(){
-    const p = this.prompt || 'mixed';
+    const raw = this.prompt || 'mixed';
+    const p = (raw==='icao'||raw==='iata'||raw==='city'||raw==='mixed') ? raw : 'mixed';
     if(p!=='mixed') return p;
-    return pick(['icao','iata','city','name']);
+    return pick(['icao','iata','city']);
   }
 
   badge(){
@@ -97,24 +98,25 @@ export class MapQuiz {
     if(t==='icao') return this.t('label.icao_code', null, 'ICAO CODE');
     if(t==='iata') return this.t('label.iata_code', null, 'IATA CODE');
     if(t==='city') return this.t('label.city', null, 'CITY');
-    if(t==='name') return this.t('label.airport_name', null, 'AIRPORT NAME');
     return this.t('label.answer', null, 'ANSWER');
   }
 
   clueLabel(a){
     const opts=[];
-    if(this.expectedType!=='icao' && a.icao) opts.push(`${this.t('clue.icao',null,'ICAO')}: ${a.icao}`);
-    if(this.expectedType!=='iata' && a.iata) opts.push(`${this.t('clue.iata',null,'IATA')}: ${a.iata}`);
-    if(this.expectedType!=='city' && a.city) opts.push(`${this.t('clue.city',null,'CITY')}: ${a.city}`);
-    if(this.expectedType!=='name' && a.name) opts.push(`${this.t('clue.name',null,'NAME')}: ${a.name}`);
-    return opts.length ? pick(opts) : `${this.t('clue.icao',null,'ICAO')}: ${a.icao||'—'}`;
+    if(this.expectedType!=='icao' && a.icao) opts.push({ type:'icao', text:`${this.t('clue.icao',null,'ICAO')}: ${a.icao}` });
+    if(this.expectedType!=='iata' && a.iata) opts.push({ type:'iata', text:`${this.t('clue.iata',null,'IATA')}: ${a.iata}` });
+    if(this.expectedType!=='city' && a.city) opts.push({ type:'city', text:`${this.t('clue.city',null,'CITY')}: ${a.city}` });
+    if(opts.length) return pick(opts);
+    if(a.city) return { type:'city', text:`${this.t('clue.city',null,'CITY')}: ${a.city}` };
+    if(a.iata) return { type:'iata', text:`${this.t('clue.iata',null,'IATA')}: ${a.iata}` };
+    if(a.icao) return { type:'icao', text:`${this.t('clue.icao',null,'ICAO')}: ${a.icao}` };
+    return { type:'other', text:'—' };
   }
 
   getExpectedAnswer(a, t){
     if(t==='icao') return a.icao||'';
     if(t==='iata') return a.iata||'';
     if(t==='city') return a.city||'';
-    if(t==='name') return a.name||'';
     return '';
   }
 
@@ -125,7 +127,8 @@ export class MapQuiz {
     this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
 
     const clue = this.clueLabel(this.current);
-    setQuestion(this.qEl, clue, this.expectedType, this.badge());
+    this.currentClue = clue;
+    setQuestion(this.qEl, clue.text, this.expectedType, this.badge(), clue.type);
 
     const baseTxt = (this.baseCtx && this.ctx?.proMode)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)
@@ -133,7 +136,7 @@ export class MapQuiz {
     this.subEl.textContent = baseTxt ? `${this.t('map.sub.click', null, 'Click on the map (no Next button)')} • ${baseTxt}` : this.t('map.sub.click', null, 'Click on the map (no Next button)');
 
     if(this.voiceEl?.checked){
-      speak((this.clueLabel(this.current)||'').toString(), { lang: this.voiceLang() });
+      speak((this.currentClue?.text || this.clueLabel(this.current).text), { lang: this.voiceLang() });
     }
 
     this.asked += 1;
@@ -161,7 +164,7 @@ export class MapQuiz {
     ans.addTo(this.layer);
     L.polyline([[lat,lon],[this.current.lat,this.current.lon]]).addTo(this.layer);
 
-    const title = `${this.badge()} | ${this.clueLabel(this.current)}`;
+    const title = `${this.badge()} | ${(this.currentClue?.text)||this.clueLabel(this.current).text}`;
     const detail = hit
       ? this.t('detail.hit', { km: Math.round(dKm) }, `Hit (≈${Math.round(dKm)} km)`)
       : this.t('detail.miss', { km: Math.round(dKm), correct: expected }, `Miss (≈${Math.round(dKm)} km) • Correct: ${expected}`);
