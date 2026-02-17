@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak, setQuestion, setQuestionText } from './utils.js';
+import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak, setQuestion, setQuestionText, filterClueOptions } from './utils.js';
 
 export class Learn {
   constructor(stats, history, ctx){
@@ -185,7 +185,11 @@ export class Learn {
     if(this.expectedType!=='icao' && a.icao) options.push({ type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` });
     if(this.expectedType!=='iata' && a.iata) options.push({ type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` });
     if(this.expectedType!=='city' && a.city) options.push({ type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` });
-    if(options.length) return pick(options);
+    if(options.length){
+      const expected = this.getExpectedAnswer(a, this.expectedType);
+      const safe = filterClueOptions(options, expected, this.expectedType);
+      return pick(safe.length ? safe : options);
+    }
     if(a.city) return { type:'city', text:`${this.t('clue.city', null, 'CITY')}: ${a.city}` };
     if(a.iata) return { type:'iata', text:`${this.t('clue.iata', null, 'IATA')}: ${a.iata}` };
     if(a.icao) return { type:'icao', text:`${this.t('clue.icao', null, 'ICAO')}: ${a.icao}` };

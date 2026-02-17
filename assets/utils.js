@@ -18,6 +18,42 @@ export function eqAnswer(user, expected){
   return a.length>0 && a===b;
 }
 
+
+// Clue anti-leak filter: avoid clues that contain the expected answer (common with airport names containing the city).
+// Returns the filtered list when possible; falls back to original options if everything would be filtered.
+export function filterClueOptions(options, expected, expectedType){
+  const opts = Array.isArray(options) ? options : [];
+  const et = (expectedType||'').toString().trim().toLowerCase();
+  const exp = normalize(expected||'');
+  // Only apply to CITY and to longer strings (avoid over-filtering short codes).
+  if(et!=='city' || exp.length<3) return opts;
+
+  const expTokens = exp.split(/\s+/).filter(t=>t.length>=3);
+
+  const filtered = opts.filter(o=>{
+    const type = (o?.type||'').toString().trim().toLowerCase();
+    // Defensive: only allow our supported clue types.
+    if(type && type!=='icao' && type!=='iata' && type!=='city') return false;
+
+    const raw = (o?.text??'').toString();
+    // Prefer value part after ":" (e.g., "IATA: CTA" -> "CTA")
+    const i = raw.indexOf(':');
+    const val = (i>=0 ? raw.slice(i+1) : raw).trim();
+    const v = normalize(val);
+
+    if(!v) return true;
+    // Direct containment (handles diacritics via normalize)
+    if(v.includes(exp)) return false;
+    // Token containment for multi-word cities (e.g. "rio de janeiro")
+    for(const t of expTokens){
+      if(t && v.includes(t)) return false;
+    }
+    return true;
+  });
+
+  return filtered.length ? filtered : opts;
+}
+
 // Special matcher for AIRPORT NAME questions: allow typing just the city name.
 // - case-insensitive
 // - accent-insensitive
