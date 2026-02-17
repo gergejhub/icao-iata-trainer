@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak, showPopup } from './utils.js';
+import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak, showPopup, setQuestion, setQuestionText } from './utils.js';
 
 export class Rapid {
   constructor(stats, history, leaderboard, ctx){
@@ -70,7 +70,7 @@ export class Rapid {
 
   renderIdle(){
     if(!this.qEl) return;
-    this.qEl.textContent = this.t('rapid.sub.ready', null, 'Pick mode + prompt, press Start');
+    setQuestionText(this.qEl, this.t('rapid.sub.ready', null, 'Pick mode + prompt, press Start'));
     this.subEl.textContent = `${this.pool.length} ${this.t('history.items', null, 'items')}`;
     if(this.okEl) this.okEl.textContent = '0';
     if(this.badEl) this.badEl.textContent = '0';
@@ -85,7 +85,7 @@ export class Rapid {
 
   startRun(){
     if(!this.pool.length){
-      this.qEl.textContent = this.t('status.no_airports', null, 'No airports in this dataset.');
+      setQuestionText(this.qEl, this.t('status.no_airports', null, 'No airports in this dataset.'));
       return;
     }
 
@@ -201,7 +201,7 @@ export class Rapid {
     this.expectedType = this.pickExpectedType();
 
     const clue = this.clueLabel(this.current);
-    this.qEl.textContent = `${clue} → ${this.badge()}`;
+    setQuestion(this.qEl, clue, this.expectedType, this.badge());
 
     if(resetSub){
       const baseHint = this.baseCtx

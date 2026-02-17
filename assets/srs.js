@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, pick, shuffleInPlace, speak } from './utils.js';
+import { eqAnswer, pick, shuffleInPlace, speak, setQuestion, setQuestionText } from './utils.js';
 
 // Simple SRS using SM-2-like intervals.
 // Stores per-airport card state in localStorage.
@@ -77,7 +77,7 @@ export class SRS {
 
   start(){
     if(!this.pool.length){
-      this.qEl.textContent = '—';
+      setQuestionText(this.qEl, '—');
       this.subEl.textContent = this.t('srs.sub.no_airports', null, 'No airports in dataset.');
       return;
     }
@@ -143,8 +143,8 @@ export class SRS {
     const expType = this.pickExpectedType(this.current);
     this.current._expectedType = expType;
 
-    const q = `${this.clueFor(this.current, expType)} → ${this.labelFor(expType)}`;
-    this.qEl.textContent = q;
+    const clue = this.clueFor(this.current, expType);
+    setQuestion(this.qEl, clue, expType, this.labelFor(expType));
 
     const baseHint = (this.ctx?.proMode && this.baseCtx)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)

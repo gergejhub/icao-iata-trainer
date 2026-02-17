@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { kmDistance, pick, shuffleInPlace, speak } from './utils.js';
+import { kmDistance, pick, shuffleInPlace, speak, setQuestion, setQuestionText } from './utils.js';
 
 export class MapQuiz {
   constructor(stats, history, leaderboard, ctx){
@@ -54,7 +54,7 @@ export class MapQuiz {
 
   start(){
     this.initMapOnce();
-    this.qEl.textContent = this.t('map.sub.ready', null, 'Pick mode + prompt, press Start');
+    setQuestionText(this.qEl, this.t('map.sub.ready', null, 'Pick mode + prompt, press Start'));
     this.subEl.textContent = this.t('status.dataset', { name: this.ctx?.packName?.(this.ctx?.currentPack?.id, this.ctx?.currentPack?.name)||'', n: this.pool.length }, `Available airports with coordinates: ${this.pool.length}`);
   }
 
@@ -72,7 +72,7 @@ export class MapQuiz {
 
   startRun(){
     if(this.pool.length < 5){
-      this.qEl.textContent = this.t('challenge.need_pool', null, 'Not enough airports in the dataset.');
+      setQuestionText(this.qEl, this.t('challenge.need_pool', null, 'Not enough airports in the dataset.'));
       return;
     }
     this.running = true;
@@ -124,8 +124,8 @@ export class MapQuiz {
     this.expectedType = this.pickExpectedType();
     this.baseCtx = this.ctx?.pickBaseContext ? this.ctx.pickBaseContext() : null;
 
-    const q = `${this.clueLabel(this.current)} → ${this.badge()}`;
-    this.qEl.textContent = q;
+    const clue = this.clueLabel(this.current);
+    setQuestion(this.qEl, clue, this.expectedType, this.badge());
 
     const baseTxt = (this.baseCtx && this.ctx?.proMode)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)

@@ -5,6 +5,13 @@
   --muted: rgba(255,255,255,.70);
   --text: rgba(255,255,255,.92);
   --accent:#ff2aa1;
+
+  /* Question-type highlights (RGB triplets) */
+  --q-icao: 59,130,246;   /* blue */
+  --q-iata: 245,158,11;   /* amber */
+  --q-city: 34,197,94;    /* green */
+  --q-name: 168,85,247;   /* violet */
+  --q-other: 255,42,161;  /* accent */
 }
 *{box-sizing:border-box}
 body{
@@ -85,6 +92,39 @@ input.answer{ width:100%; }
 .kpi .v{ font-size: 20px; font-weight: 900; margin-top:4px; }
 
 .big{ font-size: 22px; font-weight: 900; }
+
+/* Question line + category chip */
+.big[data-qtype]{
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  border-left: 4px solid rgba(var(--q-other), .80);
+}
+.big[data-qtype="icao"]{ border-left-color: rgba(var(--q-icao), .85); }
+.big[data-qtype="iata"]{ border-left-color: rgba(var(--q-iata), .85); }
+.big[data-qtype="city"]{ border-left-color: rgba(var(--q-city), .85); }
+.big[data-qtype="name"]{ border-left-color: rgba(var(--q-name), .85); }
+
+.qclue{ white-space: normal; }
+.qarrow{ opacity: .85; }
+.qchip{
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--q-other), .45);
+  background: rgba(var(--q-other), .14);
+  color: rgba(var(--q-other), .95);
+  vertical-align: middle;
+}
+.qchip-icao{ border-color: rgba(var(--q-icao), .45); background: rgba(var(--q-icao), .14); color: rgba(var(--q-icao), .95); }
+.qchip-iata{ border-color: rgba(var(--q-iata), .45); background: rgba(var(--q-iata), .14); color: rgba(var(--q-iata), .95); }
+.qchip-city{ border-color: rgba(var(--q-city), .45); background: rgba(var(--q-city), .14); color: rgba(var(--q-city), .95); }
+.qchip-name{ border-color: rgba(var(--q-name), .45); background: rgba(var(--q-name), .14); color: rgba(var(--q-name), .95); }
 .smallmuted{ color: var(--muted); font-size: 12px; }
 
 .history{ display:flex; flex-direction:column; gap:8px; margin-top:10px; max-height: 62vh; overflow:auto; padding-right: 6px; }

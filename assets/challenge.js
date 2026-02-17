@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { pick, shuffleInPlace, buildChoices, speak, showPopup } from './utils.js';
+import { pick, shuffleInPlace, buildChoices, speak, showPopup, setQuestion, setQuestionText } from './utils.js';
 
 function now(){ return Date.now(); }
 
@@ -50,7 +50,7 @@ export class Challenge {
 
   start(){
     this.refreshIdle();
-    this.qEl.textContent = '—';
+    setQuestionText(this.qEl, '—');
   }
 
   toggle(){
@@ -59,7 +59,7 @@ export class Challenge {
 
   run(){
     if(this.pool.length < 8){
-      this.qEl.textContent = '—';
+      setQuestionText(this.qEl, '—');
       this.subEl.textContent = this.t('challenge.need_pool', null, 'Not enough airports in the dataset.');
       return;
     }
@@ -80,7 +80,7 @@ export class Challenge {
     this.running = false;
     if(this.timer){ clearInterval(this.timer); this.timer=null; }
 
-    this.qEl.textContent = this.t('challenge.finished', {score:this.score}, `Finished. Score=${this.score}. Submit from Scoreboard if you want.`);
+    setQuestionText(this.qEl, this.t('challenge.finished', {score:this.score}, `Finished. Score=${this.score}. Submit from Scoreboard if you want.`));
     this.subEl.textContent = '';
     this.optsEl.innerHTML = '';
 
@@ -150,7 +150,7 @@ export class Challenge {
 
     const clue = this.clueLabel(ap, this.expectedType);
     const badge = this.badge(this.expectedType);
-    this.qEl.textContent = `${clue} → ${badge}`;
+    setQuestion(this.qEl, clue, this.expectedType, badge);
 
     const hint = (this.ctx?.proMode && this.baseCtx)
       ? this.t('pro.base_context', { base: `${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}` }, `BASE: ${this.baseCtx.iata||'—'}/${this.baseCtx.icao||'—'}`)

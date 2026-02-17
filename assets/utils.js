@@ -194,3 +194,36 @@ export function shuffleInPlace(a){
   }
   return a;
 }
+
+// Render a question line with a highlighted category chip.
+// Uses DOM construction (no innerHTML) to avoid injection issues.
+// expectedType: 'icao' | 'iata' | 'city' | 'name' | ...
+export function setQuestion(el, clue, expectedType, label){
+  if(!el) return;
+  // Reset
+  el.textContent = '';
+  const t = (expectedType||'').toString().trim().toLowerCase() || 'other';
+  el.setAttribute('data-qtype', t);
+
+  const clueSpan = document.createElement('span');
+  clueSpan.className = 'qclue';
+  clueSpan.textContent = (clue??'').toString();
+
+  const arrow = document.createElement('span');
+  arrow.className = 'qarrow';
+  arrow.textContent = ' \u2192 ';
+
+  const chip = document.createElement('span');
+  chip.className = `qchip qchip-${t}`;
+  chip.textContent = (label??'').toString();
+
+  el.appendChild(clueSpan);
+  el.appendChild(arrow);
+  el.appendChild(chip);
+}
+
+export function setQuestionText(el, text){
+  if(!el) return;
+  el.textContent = (text??'').toString();
+  el.removeAttribute('data-qtype');
+}

@@ -1,7 +1,7 @@
 import { storage } from './storage.js';
 import { perf } from './perf.js';
 import { progress } from './progress.js';
-import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak } from './utils.js';
+import { eqAnswer, eqAirportNameOrCity, pick, shuffleInPlace, buildChoices, speak, setQuestion, setQuestionText } from './utils.js';
 
 export class Learn {
   constructor(stats, history, ctx){
@@ -114,7 +114,7 @@ export class Learn {
 
   nextQuestion(resetSub=false){
     if(!this.pool.length){
-      this.qEl.textContent = '—';
+      setQuestionText(this.qEl, '—');
       this.subEl.textContent = this.t('srs.sub.no_airports', null, 'No airports in dataset.');
       return;
     }
@@ -124,7 +124,7 @@ export class Learn {
     this.expectedType = this.pickExpectedType();
 
     const clue = this.clueLabel(this.current);
-    this.qEl.textContent = `${clue} → ${this.badge()}`;
+    setQuestion(this.qEl, clue, this.expectedType, this.badge());
 
     if(resetSub){
       const baseLine = (this.ctx?.proMode && this.baseCtx)
